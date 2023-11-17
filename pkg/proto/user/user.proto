@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package="./internal/auth/proto";
+
+message User {
+  string fullName = 1;
+  string email = 2;
+  string password = 3;
+  string role = 4;
+}
+
+message CreateUserRequest {
+  User user = 1;
+}
+
+message CreateUserResponse {
+  uint32 Id = 1;
+}
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns(CreateUserResponse) {}
+}

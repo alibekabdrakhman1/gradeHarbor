@@ -1,0 +1,18 @@
+Auth:
+  JwtSecretKey: "JwtKey"
+  PasswordSecretKey: "lakjdlajsdladandal"
+HttpServer:
+  Port: 8081
+  ShutdownTimeout: 2s
+Database:
+  Host: 'localhost'
+  Port: '5432'
+  User: 'postgres'
+  Password: 'qwerty'
+  Name: 'postgres'
+  SslMode: 'disable'
+Transport:
+  UserHttpTransport:
+    Host: 'http://127.0.0.1:8081'
+  UserGrpcTransport:
+    Port: ':9090'
