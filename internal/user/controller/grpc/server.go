@@ -37,10 +37,7 @@ func (s *Server) Run() error {
 
 	log.Printf("Starting grpc server: %s", s.config.Port)
 
-	err = s.grpcServer.Serve(listener)
-	if err != nil {
-		return err
-	}
+	go s.grpcServer.Serve(listener)
 
 	return nil
 }

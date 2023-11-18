@@ -37,10 +37,9 @@ func (ut *UserHttpTransport) GetUser(ctx context.Context, email string) (*GetUse
 	responseBody, err := ut.makeRequest(
 		ctx,
 		"GET",
-		fmt.Sprintf("/api/user/v1/user/%s", email),
+		fmt.Sprintf("/api/user/v1/user/getByEmail/%s", email),
 		ut.config.Timeout,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to makeRequest err: %w", err)
 	}
@@ -48,6 +47,7 @@ func (ut *UserHttpTransport) GetUser(ctx context.Context, email string) (*GetUse
 	if err := json.Unmarshal(responseBody, &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshall response err: %w", err)
 	}
+	fmt.Println(response, err)
 
 	return response, nil
 }

@@ -34,7 +34,10 @@ func (s *UserService) Update(ctx context.Context, user model.User, userId uint) 
 	panic("implement me")
 }
 
-func (s *UserService) Get(ctx context.Context, userId uint) (model.User, error) {
+func (s *UserService) GetById(ctx context.Context, userId uint) (model.User, error) {
 	//TODO implement me
 	panic("implement me")
+}
+func (s *UserService) GetByEmail(ctx context.Context, email string) (model.User, error) {
+	return s.repository.User.GetByEmail(ctx, email)
 }

@@ -16,14 +16,14 @@ func NewUserTokenRepository(db *gorm.DB) *UserTokenRepository {
 	}
 }
 func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken model.UserToken) error {
-	if err := r.DB.WithContext(ctx).Create(userToken).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Create(&userToken).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func (r *UserTokenRepository) UpdateUserToken(ctx context.Context, userToken model.UserToken) error {
-	if err := r.DB.WithContext(ctx).Save(userToken).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Save(&userToken).Error; err != nil {
 		return err
 	}
 	return nil

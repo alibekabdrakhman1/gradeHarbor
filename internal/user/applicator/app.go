@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/grpc"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/storage"
 	"go.uber.org/zap"
@@ -24,7 +25,7 @@ func New(logger *zap.SugaredLogger, cfg *config.Config) *App {
 	}
 }
 
-func (a *App) Run() {
+func (a *App) Run() error {
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 	gracefullyShutdown(cancel)
@@ -39,6 +40,9 @@ func (a *App) Run() {
 		log.Fatal(err)
 	}
 	defer grpcServer.Close()
+	endPointHandler := http.NewManager(srv)
+	HTTPServer := http.NewServer(a.config, endPointHandler)
+	return HTTPServer.StartHTTPServer(ctx)
 }
 
 func gracefullyShutdown(c context.CancelFunc) {

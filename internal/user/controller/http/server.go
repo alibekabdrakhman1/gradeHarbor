@@ -1,11 +1,57 @@
 package http
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
+	"github.com/labstack/echo/v4/middleware"
+	"log"
+	http2 "net/http"
+	"time"
+
 	"github.com/labstack/echo/v4"
 )
 
 type Server struct {
-	config *config.Config
-	App    *echo.Echo
+	cfg     *config.Config
+	handler *Manager
+	App     *echo.Echo
+}
+
+func NewServer(cfg *config.Config, handler *Manager) *Server {
+	return &Server{
+		cfg:     cfg,
+		handler: handler,
+	}
+}
+func (s *Server) StartHTTPServer(ctx context.Context) error {
+	s.App = s.BuildEngine()
+	s.SetupRoutes()
+	go func() {
+		if err := s.App.Start(fmt.Sprintf(":%v", s.cfg.HttpServer.Port)); err != nil && !errors.Is(err, http2.ErrServerClosed) {
+			log.Fatalf("listen:%v\n", err)
+		}
+	}()
+	<-ctx.Done()
+
+	ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+	if err := s.App.Shutdown(ctxShutDown); err != nil {
+		log.Fatalf("controller Shutdown Failed:%v", err)
+	}
+	log.Print("controller exited properly")
+	return nil
+}
+
+func (s *Server) BuildEngine() *echo.Echo {
+	e := echo.New()
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"*"},
+	}))
+
+	return e
 }

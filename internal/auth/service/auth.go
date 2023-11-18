@@ -37,7 +37,7 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 	if err != nil {
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
-
+	fmt.Println(user.Password, login.Password)
 	generatedPassword := s.generatePassword(login.Password)
 	if user.Password != generatedPassword {
 		return nil, fmt.Errorf("password is wrong")

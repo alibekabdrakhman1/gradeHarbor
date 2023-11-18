@@ -29,6 +29,12 @@ func (r *UserRepository) Delete(ctx context.Context, userId uint) error {
 	return nil
 }
 
-func (r *UserRepository) Get(ctx context.Context, userId uint) (model.User, error) {
+func (r *UserRepository) GetById(ctx context.Context, userId uint) (model.User, error) {
 	return model.User{}, nil
+}
+
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.User, error) {
+	var res model.User
+	err := r.DB.WithContext(ctx).Where("email = ?", email).Find(&res).Error
+	return res, err
 }
