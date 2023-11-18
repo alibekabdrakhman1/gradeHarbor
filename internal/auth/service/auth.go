@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/model"
@@ -44,7 +45,7 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 	}
 
 	userClaim := model.UserClaim{
-		UserId: user.Id,
+		UserID: user.Id,
 		Email:  user.Email,
 		Role:   user.Role,
 	}
@@ -55,13 +56,12 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 	}
 
 	res := &model.TokenResponse{
-		UserId:       user.Id,
+		UserID:       user.Id,
 		Email:        user.Email,
 		Role:         user.Role,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}
-
 	return res, nil
 }
 
@@ -86,9 +86,46 @@ func (s *UserTokenService) Verify(ctx context.Context, email string, code string
 	panic("implement me")
 }
 
-func (s *UserTokenService) RenewToken(ctx context.Context, refreshToken string) (*model.JwtTokens, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *UserTokenService) RefreshToken(ctx context.Context, refreshToken string) (*model.JwtTokens, error) {
+	token, err := jwt.Parse(
+		refreshToken,
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(s.jwtSecretKey), nil
+		},
+	)
+
+	if err != nil {
+		var validationErr *jwt.ValidationError
+		if errors.As(err, &validationErr) {
+			if validationErr.Errors&jwt.ValidationErrorExpired > 0 {
+				return nil, errors.New("expiration date validation error")
+			}
+		}
+
+		return nil, fmt.Errorf("failed to parse jwt err: %w", err)
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T", claims)
+	}
+	user, err := s.userHttpTransport.GetUser(ctx, claims["email"].(string))
+	if err != nil {
+		return nil, fmt.Errorf("GetUser request err: %w", err)
+	}
+
+	userClaim := model.UserClaim{
+		UserID: user.Id,
+		Email:  user.Email,
+		Role:   user.Role,
+	}
+	tokens, err := s.generateToken(ctx, userClaim)
+	if err != nil {
+		return nil, fmt.Errorf("generating token err: %w", err)
+	}
+	return tokens, nil
 }
 
 func (s *UserTokenService) generateToken(ctx context.Context, user model.UserClaim) (*model.JwtTokens, error) {
@@ -96,7 +133,7 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 	refreshTokenExpirationTime := time.Now().Add(24 * time.Hour)
 
 	accessTokenClaims := &model.JWTClaim{
-		UserId: user.UserId,
+		UserID: user.UserID,
 		Email:  user.Email,
 		Role:   user.Role,
 		StandardClaims: jwt.StandardClaims{
@@ -127,7 +164,7 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 	}
 
 	userToken := model.UserToken{
-		UserId:       user.UserId,
+		UserID:       user.UserID,
 		Email:        user.Email,
 		Role:         user.Role,
 		AccessToken:  accessTokenString,

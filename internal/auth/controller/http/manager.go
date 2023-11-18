@@ -16,6 +16,6 @@ func NewManager(srv *service.Service) *Manager {
 type IUserTokenHandler interface {
 	Login(c echo.Context) error
 	Register(c echo.Context) error
-	RenewToken(c echo.Context) error
+	RefreshToken(c echo.Context) error
 	Verify(c echo.Context) error
 }

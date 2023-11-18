@@ -1,18 +1,23 @@
 package model
 
-import "github.com/golang-jwt/jwt"
+import (
+	"github.com/golang-jwt/jwt"
+	"time"
+)
 
 type UserToken struct {
-	Id           int    `db:"id"`
-	UserId       uint   `db:"user_id"`
-	Email        string `db:"email"`
-	Role         string `db:"role"`
-	AccessToken  string `db:"access_token"`
-	RefreshToken string `db:"refresh_token"`
+	ID           uint      `gorm:"primary_key;auto_increment" json:"id"`
+	UserID       uint      `gorm:"unique;not null" json:"full_name"`
+	Email        string    `gorm:"unique;not null" json:"email"`
+	Role         string    `gorm:"not null" json:"role"`
+	AccessToken  string    `gorm:"unique;not null" json:"access_token"`
+	RefreshToken string    `gorm:"unique;not null" json:"refresh_token"`
+	CreatedAt    time.Time `gorm:"default:current_timestamp" json:"created_at"`
+	UpdatedAt    time.Time `gorm:"autoUpdateTime:milli" json:"updated_at"`
 }
 
 type TokenResponse struct {
-	UserId       uint   `json:"user_id"`
+	UserID       uint   `json:"user_id"`
 	Email        string `json:"email"`
 	Role         string `json:"role"`
 	AccessToken  string `json:"access_token"`
@@ -20,7 +25,7 @@ type TokenResponse struct {
 }
 
 type JWTClaim struct {
-	UserId         uint   `json:"user_id"`
+	UserID         uint   `json:"user_id"`
 	Email          string `json:"email"`
 	Role           string `json:"role"`
 	StandardClaims jwt.StandardClaims
@@ -31,7 +36,7 @@ type RefreshJWTClaim struct {
 }
 
 type UserClaim struct {
-	UserId uint   `json:"user_id"`
+	UserID uint   `json:"user_id"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
 }

@@ -69,9 +69,22 @@ func (h *UserTokenHandler) Register(c echo.Context) error {
 	return c.JSON(http.StatusCreated, userId)
 }
 
-func (h *UserTokenHandler) RenewToken(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
+func (h *UserTokenHandler) RefreshToken(c echo.Context) error {
+	refreshRequest := struct {
+		RefreshToken string `json:"refresh_token"`
+	}{}
+
+	err := c.Bind(&refreshRequest)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	tokens, err := h.Service.UserToken.RefreshToken(c.Request().Context(), refreshRequest.RefreshToken)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, tokens)
 }
 
 func (h *UserTokenHandler) Verify(c echo.Context) error {
