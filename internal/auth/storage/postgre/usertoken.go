@@ -4,16 +4,19 @@ import (
 	"context"
 	"errors"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/model"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type UserTokenRepository struct {
-	DB *gorm.DB
+	DB     *gorm.DB
+	logger *zap.SugaredLogger
 }
 
-func NewUserTokenRepository(db *gorm.DB) *UserTokenRepository {
+func NewUserTokenRepository(db *gorm.DB, logger *zap.SugaredLogger) *UserTokenRepository {
 	return &UserTokenRepository{
-		DB: db,
+		DB:     db,
+		logger: logger,
 	}
 }
 func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken model.UserToken) error {
@@ -26,6 +29,7 @@ func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken mod
 		result = r.DB.WithContext(ctx).Save(&existingToken)
 	} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		if err := r.DB.WithContext(ctx).Save(&userToken).Error; err != nil {
+			r.logger.Errorf("creating new user-token error: %v", err)
 			return err
 		}
 	}
@@ -34,6 +38,7 @@ func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken mod
 
 func (r *UserTokenRepository) UpdateUserToken(ctx context.Context, userToken model.UserToken) error {
 	if err := r.DB.WithContext(ctx).Save(&userToken).Error; err != nil {
+		r.logger.Errorf("updating user-token error: %v", err)
 		return err
 	}
 	return nil

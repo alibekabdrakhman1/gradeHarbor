@@ -1,17 +1,15 @@
 package service
 
 import (
-	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/config"
-	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/storage"
-	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/transport"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/dto"
 )
 
 type Service struct {
 	UserToken IUserTokenService
 }
 
-func NewManager(repo *storage.Repository, authConfig config.Auth, userHttpTransport *transport.UserHttpTransport, userGrpcTransport *transport.UserGrpcTransport) *Service {
-	authService := NewUserTokenService(repo, authConfig, userHttpTransport, userGrpcTransport)
+func NewManager(dto *dto.UserTokenServiceDTO) *Service {
+	authService := NewUserTokenService(dto)
 	return &Service{
 		UserToken: authService,
 	}

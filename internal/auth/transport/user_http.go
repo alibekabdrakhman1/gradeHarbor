@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/config"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"time"
@@ -12,11 +13,13 @@ import (
 
 type UserHttpTransport struct {
 	config config.UserHttpTransport
+	logger *zap.SugaredLogger
 }
 
-func NewUserHttpTransport(config config.UserHttpTransport) *UserHttpTransport {
+func NewUserHttpTransport(config config.UserHttpTransport, logger *zap.SugaredLogger) *UserHttpTransport {
 	return &UserHttpTransport{
 		config: config,
+		logger: logger,
 	}
 }
 
@@ -41,10 +44,12 @@ func (ut *UserHttpTransport) GetUser(ctx context.Context, email string) (*GetUse
 		ut.config.Timeout,
 	)
 	if err != nil {
+		ut.logger.Errorf("http: makeRequest err: %v", err)
 		return nil, fmt.Errorf("failed to makeRequest err: %w", err)
 	}
 
 	if err := json.Unmarshal(responseBody, &response); err != nil {
+		ut.logger.Errorf("http: failed to unmarshall response err %v:", err)
 		return nil, fmt.Errorf("failed to unmarshall response err: %w", err)
 	}
 	fmt.Println(response, err)

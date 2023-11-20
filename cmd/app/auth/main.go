@@ -17,6 +17,7 @@ func main() {
 
 	cfg, err := loadConfig("./config/auth")
 	if err != nil {
+		l.Error(err)
 		l.Fatalf("failed to load config err: %v", err)
 	}
 

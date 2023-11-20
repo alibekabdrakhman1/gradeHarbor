@@ -6,12 +6,13 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/config"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/dto"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/storage"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/transport"
 	proto "github.com/alibekabdrakhman1/gradeHarbor/pkg/proto/user"
 	"github.com/golang-jwt/jwt"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -21,27 +22,31 @@ type UserTokenService struct {
 	passwordSecretKey string
 	userHttpTransport *transport.UserHttpTransport
 	userGrpcTransport *transport.UserGrpcTransport
+	logger            *zap.SugaredLogger
 }
 
-func NewUserTokenService(repo *storage.Repository, authConfig config.Auth, userHttpTransport *transport.UserHttpTransport, userGrpcTransport *transport.UserGrpcTransport) *UserTokenService {
+func NewUserTokenService(dto *dto.UserTokenServiceDTO) *UserTokenService {
 	return &UserTokenService{
-		repository:        repo,
-		jwtSecretKey:      authConfig.JwtSecretKey,
-		passwordSecretKey: authConfig.PasswordSecretKey,
-		userHttpTransport: userHttpTransport,
-		userGrpcTransport: userGrpcTransport,
+		repository:        dto.Repository,
+		jwtSecretKey:      dto.JwtSecretKey,
+		passwordSecretKey: dto.PasswordSecretKey,
+		userHttpTransport: dto.UserHttpTransport,
+		userGrpcTransport: dto.UserGrpcTransport,
+		logger:            dto.Logger,
 	}
 }
 
 func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model.TokenResponse, error) {
 	user, err := s.userHttpTransport.GetUser(ctx, login.Email)
 	if err != nil {
+		s.logger.Errorf("GetUser request err: %v", err)
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
 	fmt.Println(user.Password, login.Password)
 	generatedPassword := s.generatePassword(login.Password)
 	if user.Password != generatedPassword {
-		return nil, fmt.Errorf("password is wrong")
+		s.logger.Error("password is wrong")
+		return nil, errors.New("password is wrong")
 	}
 
 	userClaim := model.UserClaim{
@@ -52,6 +57,7 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 
 	tokens, err := s.generateToken(ctx, userClaim)
 	if err != nil {
+		s.logger.Errorf("generating token err: %v", err)
 		return nil, fmt.Errorf("generating token err: %w", err)
 	}
 
@@ -66,6 +72,7 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 }
 
 func (s *UserTokenService) Register(ctx context.Context, user model.Register) (uint, error) {
+	s.logger.Info(user)
 	req := &proto.CreateUserRequest{
 		User: &proto.User{
 			FullName: user.FullName,
@@ -76,6 +83,7 @@ func (s *UserTokenService) Register(ctx context.Context, user model.Register) (u
 	}
 	res, err := s.userGrpcTransport.CreateUser(ctx, req)
 	if err != nil {
+		s.logger.Error(err)
 		return 0, err
 	}
 	return uint(res.GetId()), nil
@@ -105,14 +113,17 @@ func (s *UserTokenService) RefreshToken(ctx context.Context, refreshToken string
 			}
 		}
 
+		s.logger.Error(err)
 		return nil, fmt.Errorf("failed to parse jwt err: %w", err)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
+		s.logger.Error(err)
 		return nil, fmt.Errorf("unexpected type %T", claims)
 	}
 	user, err := s.userHttpTransport.GetUser(ctx, claims["email"].(string))
 	if err != nil {
+		s.logger.Error(err)
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
 
@@ -123,6 +134,7 @@ func (s *UserTokenService) RefreshToken(ctx context.Context, refreshToken string
 	}
 	tokens, err := s.generateToken(ctx, userClaim)
 	if err != nil {
+		s.logger.Error(err)
 		return nil, fmt.Errorf("generating token err: %w", err)
 	}
 	return tokens, nil
@@ -146,7 +158,8 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 
 	accessTokenString, err := accessClaimToken.SignedString(secretKey)
 	if err != nil {
-		return nil, fmt.Errorf("SignedString err: %w", err)
+		s.logger.Errorf("AccessToken: SignedStrign err: %v", err)
+		return nil, fmt.Errorf("AccessToken: SignedString err: %w", err)
 	}
 
 	refreshTokenClaims := model.RefreshJWTClaim{
@@ -160,7 +173,8 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 
 	refreshTokenString, err := refreshClaimToken.SignedString(secretKey)
 	if err != nil {
-		return nil, fmt.Errorf("SignedString err: %w", err)
+		s.logger.Errorf("RefreshToken: SignedString err: %v", err)
+		return nil, fmt.Errorf("RefreshToken: SignedString err: %w", err)
 	}
 
 	userToken := model.UserToken{
@@ -171,9 +185,12 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 		RefreshToken: refreshTokenString,
 	}
 
+	s.logger.Info(userToken)
+
 	err = s.repository.UserToken.CreateUserToken(ctx, userToken)
 	if err != nil {
-		return nil, fmt.Errorf("CreateUserToken err: %w", err)
+		s.logger.Errorf("CreateUserToken err: %v", err)
+		return nil, errors.New(fmt.Sprintf("CreateUserToken err: %v", err))
 	}
 
 	jwtToken := &model.JwtTokens{

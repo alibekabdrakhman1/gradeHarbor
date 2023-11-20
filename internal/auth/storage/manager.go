@@ -6,6 +6,7 @@ import (
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/storage/postgre"
+	"go.uber.org/zap"
 )
 
 func dsn(cfg config.Config) string {
@@ -27,11 +28,11 @@ type IUserTokenRepository interface {
 	UpdateUserToken(ctx context.Context, userToken model.UserToken) error
 }
 
-func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error) {
+func NewRepository(ctx context.Context, cfg *config.Config, logger *zap.SugaredLogger) (*Repository, error) {
 	DB, err := postgre.Dial(ctx, dsn(*cfg))
 	if err != nil {
 		return nil, err
 	}
-	userToken := postgre.NewUserTokenRepository(DB)
+	userToken := postgre.NewUserTokenRepository(DB, logger)
 	return &Repository{UserToken: userToken}, nil
 }
