@@ -24,14 +24,11 @@ func NewUserHttpTransport(config config.UserHttpTransport, logger *zap.SugaredLo
 }
 
 type GetUserResponse struct {
-	Id          uint   `json:"id"`
-	FullName    string `json:"full_name"`
-	Email       string `json:"email"`
-	Role        string `json:"role"`
-	IsConfirmed bool   `json:"is_confirmed"`
-	Year        int    `json:"year"`
-	ParentId    string `json:"parent_id"`
-	Password    string `json:"password"`
+	Id       uint   `json:"id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	Password string `json:"password"`
 }
 
 func (ut *UserHttpTransport) GetUser(ctx context.Context, email string) (*GetUserResponse, error) {

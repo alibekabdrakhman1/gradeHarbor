@@ -31,13 +31,12 @@ type JWTClaim struct {
 	StandardClaims jwt.StandardClaims
 }
 type RefreshJWTClaim struct {
-	Email          string `json:"email"`
+	UserID         uint `json:"user_id"`
 	StandardClaims jwt.StandardClaims
 }
 
 type UserClaim struct {
 	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
 	Role   string `json:"role"`
 }
 

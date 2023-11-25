@@ -5,24 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http/handler"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http/middleware"
+	"github.com/labstack/echo/v4"
+	middleware2 "github.com/labstack/echo/v4/middleware"
 	"log"
 	http2 "net/http"
 	"time"
-
-	"github.com/labstack/echo/v4"
 )
 
 type Server struct {
 	cfg     *config.Config
-	handler *Manager
+	handler *handler.Manager
 	App     *echo.Echo
+	jwt     *middleware.JWTAuth
 }
 
-func NewServer(cfg *config.Config, handler *Manager) *Server {
+func NewServer(cfg *config.Config, handler *handler.Manager, jwt *middleware.JWTAuth) *Server {
 	return &Server{
 		cfg:     cfg,
 		handler: handler,
+		jwt:     jwt,
 	}
 }
 func (s *Server) StartHTTPServer(ctx context.Context) error {
@@ -48,7 +51,7 @@ func (s *Server) StartHTTPServer(ctx context.Context) error {
 
 func (s *Server) BuildEngine() *echo.Echo {
 	e := echo.New()
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	e.Use(middleware2.CORSWithConfig(middleware2.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowHeaders: []string{"*"},
 	}))

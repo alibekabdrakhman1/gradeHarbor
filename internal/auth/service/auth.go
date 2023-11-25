@@ -37,22 +37,20 @@ func NewUserTokenService(dto *dto.UserTokenServiceDTO) *UserTokenService {
 }
 
 func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model.TokenResponse, error) {
-	user, err := s.userHttpTransport.GetUser(ctx, login.Email)
+	user, err := s.userGrpcTransport.GetUserByEmail(ctx, &proto.GetUserByEmailRequest{Email: login.Email})
 	if err != nil {
 		s.logger.Errorf("GetUser request err: %v", err)
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
-	fmt.Println(user.Password, login.Password)
 	generatedPassword := s.generatePassword(login.Password)
-	if user.Password != generatedPassword {
+	if user.GetUser().GetPassword() != generatedPassword {
 		s.logger.Error("password is wrong")
 		return nil, errors.New("password is wrong")
 	}
 
 	userClaim := model.UserClaim{
-		UserID: user.Id,
-		Email:  user.Email,
-		Role:   user.Role,
+		UserID: uint(user.GetUser().GetId()),
+		Role:   user.GetUser().GetRole(),
 	}
 
 	tokens, err := s.generateToken(ctx, userClaim)
@@ -62,9 +60,9 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 	}
 
 	res := &model.TokenResponse{
-		UserID:       user.Id,
-		Email:        user.Email,
-		Role:         user.Role,
+		UserID:       uint(user.GetUser().GetId()),
+		Email:        user.GetUser().GetEmail(),
+		Role:         user.GetUser().GetRole(),
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}
@@ -74,7 +72,7 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 func (s *UserTokenService) Register(ctx context.Context, user model.Register) (uint, error) {
 	s.logger.Info(user)
 	req := &proto.CreateUserRequest{
-		User: &proto.User{
+		User: &proto.CreateUser{
 			FullName: user.FullName,
 			Email:    user.Email,
 			Password: s.generatePassword(user.Password),
@@ -121,16 +119,15 @@ func (s *UserTokenService) RefreshToken(ctx context.Context, refreshToken string
 		s.logger.Error(err)
 		return nil, fmt.Errorf("unexpected type %T", claims)
 	}
-	user, err := s.userHttpTransport.GetUser(ctx, claims["email"].(string))
+	user, err := s.userGrpcTransport.GetUserByEmail(ctx, &proto.GetUserByEmailRequest{Email: claims["email"].(string)})
 	if err != nil {
 		s.logger.Error(err)
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
 
 	userClaim := model.UserClaim{
-		UserID: user.Id,
-		Email:  user.Email,
-		Role:   user.Role,
+		UserID: uint(user.GetUser().GetId()),
+		Role:   user.GetUser().GetRole(),
 	}
 	tokens, err := s.generateToken(ctx, userClaim)
 	if err != nil {
@@ -146,7 +143,6 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 
 	accessTokenClaims := &model.JWTClaim{
 		UserID: user.UserID,
-		Email:  user.Email,
 		Role:   user.Role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: accessTokenExpirationTime.Unix(),
@@ -163,7 +159,7 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 	}
 
 	refreshTokenClaims := model.RefreshJWTClaim{
-		Email: user.Email,
+		UserID: user.UserID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: refreshTokenExpirationTime.Unix(),
 		},
@@ -179,7 +175,6 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 
 	userToken := model.UserToken{
 		UserID:       user.UserID,
-		Email:        user.Email,
 		Role:         user.Role,
 		AccessToken:  accessTokenString,
 		RefreshToken: refreshTokenString,

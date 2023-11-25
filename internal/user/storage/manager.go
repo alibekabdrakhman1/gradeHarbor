@@ -34,8 +34,8 @@ func dsn(cfg config.Config) string {
 
 type IUserRepository interface {
 	Create(ctx context.Context, user model.User) (uint, error)
-	Delete(ctx context.Context, userId uint) error
-	Update(ctx context.Context, user model.User, userId uint) (model.User, error)
-	GetById(ctx context.Context, userId uint) (model.User, error)
-	GetByEmail(ctx context.Context, email string) (model.User, error)
+	Delete(ctx context.Context, userID uint) error
+	Update(ctx context.Context, user model.User, userID uint) (*model.User, error)
+	GetById(ctx context.Context, userID uint) (*model.ResponseUser, error)
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
 }

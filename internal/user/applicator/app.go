@@ -5,6 +5,8 @@ import (
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/grpc"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http/handler"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http/middleware"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/storage"
 	"go.uber.org/zap"
@@ -40,8 +42,9 @@ func (a *App) Run() error {
 		log.Fatal(err)
 	}
 	defer grpcServer.Close()
-	endPointHandler := http.NewManager(srv)
-	HTTPServer := http.NewServer(a.config, endPointHandler)
+	endPointHandler := handler.NewManager(srv)
+	jwt := middleware.NewJWTAuth([]byte(a.config.Auth.JwtSecretKey), srv.Auth, a.logger)
+	HTTPServer := http.NewServer(a.config, endPointHandler, jwt)
 	return HTTPServer.StartHTTPServer(ctx)
 }
 

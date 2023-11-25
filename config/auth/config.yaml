@@ -9,7 +9,7 @@ Database:
   Port: '5432'
   User: 'postgres'
   Password: 'qwerty'
-  Name: 'postgres'
+  Name: 'justcode'
   SslMode: 'disable'
 Transport:
   UserHttpTransport:

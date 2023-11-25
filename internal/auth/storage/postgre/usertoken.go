@@ -28,7 +28,7 @@ func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken mod
 		existingToken.RefreshToken = userToken.RefreshToken
 		result = r.DB.WithContext(ctx).Save(&existingToken)
 	} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		if err := r.DB.WithContext(ctx).Save(&userToken).Error; err != nil {
+		if err := r.DB.WithContext(ctx).Create(&userToken).Error; err != nil {
 			r.logger.Errorf("creating new user-token error: %v", err)
 			return err
 		}

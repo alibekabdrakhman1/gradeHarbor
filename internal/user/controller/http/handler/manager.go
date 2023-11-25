@@ -1,4 +1,4 @@
-package http
+package handler
 
 import (
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
@@ -14,8 +14,9 @@ func NewManager(srv *service.Service) *Manager {
 }
 
 type IUserHandler interface {
+	Me(c echo.Context) error
 	GetById(c echo.Context) error
-	GetByEmail(c echo.Context) error
 	Update(c echo.Context) error
 	Delete(c echo.Context) error
+	DeleteByID(c echo.Context) error
 }
