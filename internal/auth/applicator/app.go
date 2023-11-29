@@ -39,7 +39,7 @@ func (a *App) Run() error {
 
 	userHttpTransport := transport.NewUserHttpTransport(a.config.Transport.UserHttpTransport, a.logger)
 	userGrpcTransport := transport.NewUserGrpcTransport(a.config.Transport.UserGrpcTransport, a.logger)
-
+	a.logger.Info("transports success")
 	serviceDTO := &dto.UserTokenServiceDTO{
 		Repository:        repo,
 		JwtSecretKey:      a.config.Auth.JwtSecretKey,

@@ -7,6 +7,7 @@ type Config struct {
 	Database   Database   `yaml:"Database"`
 	Auth       Auth       `yaml:"JwtSecretKey"`
 	Transport  Transport  `yaml:"Transport"`
+	Kafka      Kafka      `yaml:"Kafka"`
 }
 
 type Database struct {
@@ -36,4 +37,18 @@ type UserHttpTransport struct {
 }
 type UserGrpcTransport struct {
 	Port string `yaml:"Port"`
+}
+
+type Kafka struct {
+	Brokers  []string `yaml:"brokers"`
+	Producer Producer `yaml:"producer"`
+	Consumer Consumer `yaml:"consumer"`
+}
+
+type Producer struct {
+	Topic string `yaml:"topic"`
+}
+
+type Consumer struct {
+	Topics []string `yaml:"topics"`
 }

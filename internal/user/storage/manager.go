@@ -9,7 +9,11 @@ import (
 )
 
 type Repository struct {
-	User IUserRepository
+	User    IUserRepository
+	Admin   IAdminRepository
+	Parent  IClientRepository
+	Student IClientRepository
+	Teacher IClientRepository
 }
 
 func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error) {
@@ -18,7 +22,17 @@ func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error)
 		return nil, err
 	}
 	userRepository := postgre.NewUserRepository(DB)
-	return &Repository{User: userRepository}, nil
+	studentRepository := postgre.NewStudentRepository(DB)
+	teacherRepository := postgre.NewTeacherRepository(DB)
+	adminRepository := postgre.NewAdminRepository(DB)
+	parentRepository := postgre.NewParentRepository(DB)
+	return &Repository{
+		User:    userRepository,
+		Admin:   adminRepository,
+		Parent:  parentRepository,
+		Student: studentRepository,
+		Teacher: teacherRepository,
+	}, nil
 }
 
 func dsn(cfg config.Config) string {
@@ -36,6 +50,24 @@ type IUserRepository interface {
 	Create(ctx context.Context, user model.User) (uint, error)
 	Delete(ctx context.Context, userID uint) error
 	Update(ctx context.Context, user model.User, userID uint) (*model.User, error)
-	GetById(ctx context.Context, userID uint) (*model.ResponseUser, error)
+	GetById(ctx context.Context, userID uint) (*model.UserResponse, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+}
+
+type IClientRepository interface {
+	GetAllParents(ctx context.Context, id uint) ([]*model.ParentResponse, error)
+	GetParentByID(ctx context.Context, id uint, parentID uint) (*model.ParentResponse, error)
+	GetAllTeachers(ctx context.Context, id uint) ([]*model.UserResponse, error)
+	GetTeacherByID(ctx context.Context, id uint, teacherID uint) (*model.TeacherResponse, error)
+	GetAllStudents(ctx context.Context, id uint) ([]*model.UserResponse, error)
+	GetStudentByID(ctx context.Context, id uint, studentID uint) (*model.StudentResponse, error)
+}
+
+type IAdminRepository interface {
+	GetAllParents(ctx context.Context) ([]*model.ParentResponse, error)
+	GetParentByID(ctx context.Context, parentID uint) (*model.ParentResponse, error)
+	GetAllTeachers(ctx context.Context) ([]*model.UserResponse, error)
+	GetTeacherByID(ctx context.Context, teacherID uint) (*model.TeacherResponse, error)
+	GetAllStudents(ctx context.Context) ([]*model.UserResponse, error)
+	GetStudentByID(ctx context.Context, studentID uint) (*model.StudentResponse, error)
 }

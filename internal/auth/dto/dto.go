@@ -14,3 +14,8 @@ type UserTokenServiceDTO struct {
 	UserGrpcTransport *transport.UserGrpcTransport
 	Logger            *zap.SugaredLogger
 }
+
+type UserCode struct {
+	UserID uint
+	Code   string
+}

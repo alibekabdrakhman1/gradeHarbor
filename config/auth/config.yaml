@@ -17,3 +17,11 @@ Transport:
     Timeout: 5s
   UserGrpcTransport:
     Port: ":9090"
+Kafka:
+  Brokers:
+    - 127.0.0.1:19092
+  Producer:
+    topic: "user-verification"
+  Consumer:
+    topics:
+      - "user-verification"

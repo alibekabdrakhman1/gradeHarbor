@@ -35,14 +35,14 @@ func (a *App) Run() error {
 	if err != nil {
 		log.Fatalf("cannot сonnect to mainDB '%s:%d': %v", a.config.Database.Host, a.config.Database.Port, err)
 	}
-	srv := service.NewManager(repository, a.config)
+	srv := service.NewManager(repository, a.config, a.logger)
 	grpcServer := grpc.NewServer(srv, &a.config.Transport.UserGrpcTransport)
 	err = grpcServer.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer grpcServer.Close()
-	endPointHandler := handler.NewManager(srv)
+	endPointHandler := handler.NewManager(srv, a.logger)
 	jwt := middleware.NewJWTAuth([]byte(a.config.Auth.JwtSecretKey), srv.Auth, a.logger)
 	HTTPServer := http.NewServer(a.config, endPointHandler, jwt)
 	return HTTPServer.StartHTTPServer(ctx)

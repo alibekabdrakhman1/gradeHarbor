@@ -7,5 +7,6 @@ type Grade struct {
 	ClassId      string
 	StudentId    string
 	Grade        string
+	Week         int
 	LastModified time.Time
 }

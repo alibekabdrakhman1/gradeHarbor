@@ -1,50 +1,40 @@
 package http
 
 func (s *Server) SetupRoutes() {
-	v1 := s.App.Group("/v1", s.jwt.ValidateAuth)
-	v1.GET("/profile", s.handler.User.Me)       //+
-	v1.DELETE("/delete", s.handler.User.Delete) //+
-	v1.PUT("/profile/update", s.handler.User.Update)
+	v1 := s.App.Group("/v1/user", s.jwt.ValidateAuth)
+	v1.GET("/profile", s.handler.User.Me)            //+
+	v1.DELETE("/delete", s.handler.User.Delete)      //+
+	v1.PUT("/profile/update", s.handler.User.Update) //+
+	v1.GET("/grades", s.handler.User.GetByID)
 
-	v1.GET("/students", s.handler.User.GetById)
-	v1.GET("/students/{id}", s.handler.User.GetById)
+	v1.GET("/parents", s.handler.User.GetAllParents)      //TODO
+	v1.GET("/parents/{id}", s.handler.User.GetParentByID) //TODO
 
-	v1.GET("/parents", s.handler.User.GetById)
-	v1.GET("/parents/{id}", s.handler.User.GetById)
+	v1.GET("/teachers", s.handler.User.GetAllTeachers)      //TODO returns my teachers
+	v1.GET("/teachers/{id}", s.handler.User.GetAllTeachers) //TODO returns my teachers
 
-	student := v1.Group("/student")
-	student.GET("/grades", s.handler.User.GetById)   //TODO returns my grades
-	student.GET("/teachers", s.handler.User.GetById) //TODO returns my teachers
+	students := v1.Group("/students")
+	students.GET("", s.handler.User.GetAllStudents)                       //TODO возвращает моих ребенков
+	students.GET("/{id}", s.handler.User.GetStudentByID)                  //TODO
+	students.GET("/{id}/teachers", s.handler.User.GetStudentTeachersByID) //TODO возвращает преподов ребенка
+	students.GET("/{id}/classes", s.handler.User.GetStudentTeachersByID)  //TODO возвращает преподов ребенка
+	students.GET("/{id}/grades", s.handler.User.GetStudentTeachersByID)   //TODO возвращает преподов ребенка
 
-	parent := v1.Group("/parent/students")
-	parent.GET("/", s.handler.User.GetById) //TODO возвращает моих ребенков
-	parent.GET("/{id}", s.handler.User.GetById)
-	parent.GET("/{id}/grades", s.handler.User.GetById)   //TODO возвращает оценки ребенка
-	parent.GET("/{id}/teachers", s.handler.User.GetById) //TODO возвращает преподов ребенка
+	admin := v1.Group("/admin", s.jwt.ValidateAdmin)
+	admin.GET("/parents", s.handler.Admin.GetAllParents)
+	admin.GET("/parents/{id}", s.handler.Admin.GetParentByID)
+	admin.GET("/teachers", s.handler.Admin.GetAllTeachers)
+	admin.GET("/teachers/{id}", s.handler.Admin.GetTeacherByID)
+	admin.GET("/students", s.handler.Admin.GetAllStudents)
+	admin.GET("/students/{id}", s.handler.Admin.GetStudentByID)
+	admin.GET("/students/{id}/grades", s.handler.Admin.GetTeacherByID) //TODO
 
-	admin := v1.Group("/admin")
-	admin.POST("/user/delete/{id}", s.handler.User.DeleteByID) //+
-	admin.POST("/create", s.handler.User.GetById)              //TODO create new admin
-	admin.POST("/parent", s.handler.User.GetById)              //TODO set parent
+	admin.POST("/user/delete/{id}", s.handler.Admin.DeleteUser) //+
+	admin.POST("/create", s.handler.Admin.CreateAdmin)          //+
 
+	admin.POST("/class", s.handler.Admin.CreateClass)        //TODO create new class
+	admin.GET("/classes", s.handler.Admin.GetAllClasses)     //TODO getAll classes new class needs to do search and filter
+	admin.GET("/classes/{id}", s.handler.Admin.GetClassByID) //TODO get class by ID new class needs to do search and filter
+	admin.PUT("/classes/{id}", s.handler.Admin.UpdateClass)  //TODO update class
+	//TODO DELETE
 }
-
-//v1.GET("/classes", s.handler.User.GetById)
-//v1.GET("/classes/{id}/students", s.handler.User.GetByEmail) //TODO returns class students
-//v1.GET("/classes/{id}/students", s.handler.User.GetByEmail) //TODO returns class students
-//parent.GET("/{id}/classes", s.handler.User.GetById)      //TODO возвращает классы ребенка
-//parent.GET("/{id}/classes/{id}", s.handler.User.GetById) //TODO возвращает класс по айди ребенка
-//admin.POST("/classes", s.handler.User.GetById)                     //TODO create new class
-//admin.PUT("/classes/{id}/add/{studentId}", s.handler.User.GetById) //TODO adding new student in class
-//admin.GET("/classes", s.handler.User.GetById)                      //TODO getAll classes new class needs to do search and filter
-//admin.POST("/classes/{id}", s.handler.User.GetById) //TODO create new class
-//admin.GET("/students", s.handler.User.GetById)                     //TODO returns all students //TODO needs to do search, filter and per_page
-//admin.GET("/parents", s.handler.User.GetById)                      //TODO returns all parents
-//admin.GET("/teachers", s.handler.User.GetById)                     //TODO returns all teachers
-//teacher := v1.Group("/teacher")
-//teacherClass := teacher.Group("/classes")
-//teacherClass.GET("", s.handler.User.GetById)               //TODO returns own classes
-//teacherClass.GET("/{id}", s.handler.User.GetById)          //TODO returns class by id
-//teacherClass.GET("/{id}/grades", s.handler.User.GetById)   //TODO returns all grades by class_id
-//teacherClass.GET("/{id}/students", s.handler.User.GetById) //TODO returns all students in class by class_id
-//teacherClass.POST("/{id}/grades", s.handler.User.GetById)  //TODO post grades to class by class_id
