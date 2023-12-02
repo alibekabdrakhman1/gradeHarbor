@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/dto"
@@ -11,6 +9,7 @@ import (
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/storage"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/transport"
 	proto "github.com/alibekabdrakhman1/gradeHarbor/pkg/proto/user"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/utils"
 	"github.com/golang-jwt/jwt"
 	"go.uber.org/zap"
 	"time"
@@ -42,10 +41,10 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 		s.logger.Errorf("GetUser request err: %v", err)
 		return nil, fmt.Errorf("GetUser request err: %w", err)
 	}
-	generatedPassword := s.generatePassword(login.Password)
-	if user.GetUser().GetPassword() != generatedPassword {
-		s.logger.Error("password is wrong")
-		return nil, errors.New("password is wrong")
+	err = utils.CheckPassword(login.Password, user.GetUser().GetPassword())
+	if err != nil {
+		s.logger.Error("incorrect password")
+		return nil, errors.New("incorrect password")
 	}
 
 	userClaim := model.UserClaim{
@@ -71,11 +70,16 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 
 func (s *UserTokenService) Register(ctx context.Context, user model.Register) (uint, error) {
 	s.logger.Info(user)
+	pass, err := utils.HashPassword(user.Password)
+	if err != nil {
+		s.logger.Error(err)
+		return 0, err
+	}
 	req := &proto.CreateUserRequest{
 		User: &proto.CreateUser{
 			FullName: user.FullName,
 			Email:    user.Email,
-			Password: s.generatePassword(user.Password),
+			Password: pass,
 			Role:     user.Role,
 		},
 	}
@@ -194,10 +198,4 @@ func (s *UserTokenService) generateToken(ctx context.Context, user model.UserCla
 	}
 
 	return jwtToken, nil
-}
-func (s *UserTokenService) generatePassword(password string) string {
-	hash := hmac.New(sha256.New, []byte(s.passwordSecretKey))
-	_, _ = hash.Write([]byte(password))
-
-	return fmt.Sprintf("%x", hash.Sum(nil))
 }

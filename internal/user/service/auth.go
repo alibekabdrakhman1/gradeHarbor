@@ -54,6 +54,7 @@ func (s *AuthService) GetJwtUserID(jwtToken string) (*model.ContextUserID, error
 	}
 	return user, nil
 }
+
 func (s *AuthService) GetJwtUserRole(jwtToken string) (*model.ContextUserRole, error) {
 	token, err := jwt.Parse(
 		jwtToken,

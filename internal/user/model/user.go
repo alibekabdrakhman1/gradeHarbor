@@ -30,3 +30,7 @@ type ContextUserRole struct {
 }
 
 type contextKey string
+
+type ParentIDReq struct {
+	ID uint `json:"parent_id"`
+}

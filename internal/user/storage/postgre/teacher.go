@@ -16,32 +16,7 @@ type TeacherRepository struct {
 	DB *gorm.DB
 }
 
-func (r *TeacherRepository) GetAllParents(ctx context.Context, id uint) ([]*model.ParentResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *TeacherRepository) GetParentByID(ctx context.Context, id uint, parentID uint) (*model.ParentResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *TeacherRepository) GetAllTeachers(ctx context.Context, id uint) ([]*model.UserResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *TeacherRepository) GetTeacherByID(ctx context.Context, id uint, teacherID uint) (*model.TeacherResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *TeacherRepository) GetAllStudents(ctx context.Context, id uint) ([]*model.UserResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *TeacherRepository) GetStudentByID(ctx context.Context, id uint, studentID uint) (*model.StudentResponse, error) {
+func (r *TeacherRepository) GetStudents(ctx context.Context, id uint) ([]*model.UserResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }

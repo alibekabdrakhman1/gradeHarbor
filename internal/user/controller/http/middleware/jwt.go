@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enum"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
@@ -57,17 +58,48 @@ func (m *JWTAuth) ValidateAuth(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (m *JWTAuth) ValidateAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		role, ok := c.Request().Context().Value(model.ContextUserRoleKey).(*model.ContextUserRole)
-		if !ok {
-			m.logger.Error("not valid context userRole")
-			return errors.New("not valid context userRole")
-		}
-		if role.Role != "admin" {
-			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("not permited"))
+		if err := m.validateRole(c, enum.Admin); err != nil {
+			return err
 		}
 		return next(c)
-
 	}
+}
+
+func (m *JWTAuth) ValidateParent(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := m.validateRole(c, enum.Parent); err != nil {
+			return err
+		}
+		return next(c)
+	}
+}
+func (m *JWTAuth) ValidateTeacher(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := m.validateRole(c, enum.Teacher); err != nil {
+			return err
+		}
+		return next(c)
+	}
+}
+func (m *JWTAuth) ValidateStudent(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := m.validateRole(c, enum.Student); err != nil {
+			return err
+		}
+		return next(c)
+	}
+}
+func (m *JWTAuth) validateRole(c echo.Context, expectedRole string) error {
+	role, ok := c.Request().Context().Value(model.ContextUserRoleKey).(*model.ContextUserRole)
+	if !ok {
+		m.logger.Error("not valid context userRole")
+		return errors.New("not valid context userRole")
+	}
+	if role.Role != expectedRole {
+		m.logger.Warn(fmt.Sprintf("you are not %v", expectedRole))
+		return echo.NewHTTPError(http.StatusForbidden, fmt.Sprintf("not permitted"))
+	}
+	return nil
 }
 
 func (m *JWTAuth) getTokenFromHeader(r *http.Request) (string, error) {

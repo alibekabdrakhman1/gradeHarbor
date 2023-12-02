@@ -60,3 +60,23 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 
 	return &res, err
 }
+
+func (r *UserRepository) GetProfileById(ctx context.Context, id uint, userID uint) (*model.UserResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) GetStudentTeachersByID(ctx context.Context, id uint, userID uint) ([]*model.UserResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) GetStudentParentByID(ctx context.Context, id uint, userID uint) (*model.ParentResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) GetParentChildrenByID(ctx context.Context, id uint, userID uint) ([]*model.UserResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}

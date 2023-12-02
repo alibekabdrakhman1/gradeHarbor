@@ -23,11 +23,26 @@ func NewUserService(r *storage.Repository, logger *zap.SugaredLogger) *UserServi
 
 func (s *UserService) Create(ctx context.Context, user model.User) (uint, error) {
 	user.IsConfirmed = false
-	return s.repository.User.Create(ctx, user)
+	id, err := s.repository.User.Create(ctx, user)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("creating new user error: %v", err))
+		return 0, fmt.Errorf("creating new user error: %v", err)
+	}
+	return id, nil
 }
 
 func (s *UserService) GetByID(ctx context.Context, userID uint) (*model.UserResponse, error) {
-	return s.repository.User.GetById(ctx, userID)
+	id, ok := ctx.Value(model.ContextUserIDKey).(*model.ContextUserID)
+	if !ok {
+		s.logger.Error("not valid context userID")
+		return nil, errors.New("not valid context userID")
+	}
+	user, err := s.repository.User.GetProfileById(ctx, id.ID, userID)
+	if err != nil {
+		s.logger.Error(fmt.Errorf("GetProfileByID error: %v", err))
+		return nil, fmt.Errorf("GetProfileByID error: %v", err)
+	}
+	return user, nil
 }
 
 func (s *UserService) GetByContext(ctx context.Context) (*model.UserResponse, error) {
@@ -37,7 +52,7 @@ func (s *UserService) GetByContext(ctx context.Context) (*model.UserResponse, er
 		return nil, errors.New("not valid context userID")
 	}
 
-	user, err := s.GetByID(ctx, id.ID)
+	user, err := s.repository.User.GetById(ctx, id.ID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
 		return nil, err
@@ -56,7 +71,7 @@ func (s *UserService) Update(ctx context.Context, user model.User) (*model.User,
 		s.logger.Error("not valid context userID")
 		return nil, errors.New("not valid context userID")
 	}
-	oldUser, err := s.GetByID(ctx, id.ID)
+	oldUser, err := s.repository.User.GetById(ctx, id.ID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
 		return nil, err
@@ -96,7 +111,7 @@ func (s *UserService) DeleteByID(ctx context.Context, userID uint) error {
 		return errors.New("not permitted")
 	}
 
-	user, err := s.GetByID(ctx, userID)
+	user, err := s.repository.User.GetById(ctx, userID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
 		return err
@@ -113,4 +128,79 @@ func (s *UserService) DeleteByID(ctx context.Context, userID uint) error {
 	}
 
 	return nil
+}
+
+func (s *UserService) GetStudentTeachersByID(ctx context.Context, userID uint) ([]*model.UserResponse, error) {
+	id, ok := ctx.Value(model.ContextUserIDKey).(*model.ContextUserID)
+	if !ok {
+		s.logger.Error("not valid context userID")
+		return nil, errors.New("not valid context userID")
+	}
+	user, err := s.repository.User.GetById(ctx, userID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
+		return nil, err
+	}
+	if user.Role != "student" {
+		s.logger.Error(errors.New("user is not a student"))
+		return nil, errors.New("user is not a student")
+	}
+
+	teachers, err := s.repository.User.GetStudentTeachersByID(ctx, id.ID, userID)
+	if err != nil {
+		s.logger.Error(fmt.Errorf("getting student teachers error: %v", err))
+		return nil, fmt.Errorf("getting student teachers error: %v", err)
+	}
+
+	return teachers, nil
+}
+
+func (s *UserService) GetStudentParentByID(ctx context.Context, userID uint) (*model.ParentResponse, error) {
+	id, ok := ctx.Value(model.ContextUserIDKey).(*model.ContextUserID)
+	if !ok {
+		s.logger.Error("not valid context userID")
+		return nil, errors.New("not valid context userID")
+	}
+	user, err := s.repository.User.GetById(ctx, userID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
+		return nil, err
+	}
+	if user.Role != "student" {
+		s.logger.Error(errors.New("user is not a student"))
+		return nil, errors.New("user is not a student")
+	}
+
+	parent, err := s.repository.User.GetStudentParentByID(ctx, id.ID, userID)
+	if err != nil {
+		s.logger.Error(fmt.Errorf("getting student parent error: %v", err))
+		return nil, fmt.Errorf("getting student parent error: %v", err)
+	}
+
+	return parent, nil
+}
+
+func (s *UserService) GetParentChildrenByID(ctx context.Context, userID uint) ([]*model.UserResponse, error) {
+	id, ok := ctx.Value(model.ContextUserIDKey).(*model.ContextUserID)
+	if !ok {
+		s.logger.Error("not valid context userID")
+		return nil, errors.New("not valid context userID")
+	}
+	user, err := s.repository.User.GetById(ctx, userID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
+		return nil, err
+	}
+	if user.Role != "parent" {
+		s.logger.Error(errors.New("user is not a parent"))
+		return nil, errors.New("user is not a parent")
+	}
+
+	children, err := s.repository.User.GetParentChildrenByID(ctx, id.ID, userID)
+	if err != nil {
+		s.logger.Error(fmt.Errorf("getting parent children error: %v", err))
+		return nil, fmt.Errorf("getting parent children error: %v", err)
+	}
+
+	return children, nil
 }

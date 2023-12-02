@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enum"
 	"github.com/alibekabdrakhman1/gradeHarbor/pkg/response"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -35,28 +36,6 @@ func (h *UserHandler) Me(c echo.Context) error {
 		})
 	}
 	h.logger.Info(user)
-	return c.JSON(http.StatusOK, response.APIResponse{
-		Message: "OK",
-		Data:    user,
-	})
-}
-
-func (h *UserHandler) GetByID(c echo.Context) error {
-	id, err := h.convertIdToUint(c.Param("id"))
-	if err != nil {
-		h.logger.Error(err)
-		return c.JSON(http.StatusBadRequest, response.APIResponse{
-			Message: err.Error(),
-		})
-	}
-
-	user, err := h.service.User.GetByID(c.Request().Context(), id)
-	if err != nil {
-		h.logger.Error(err)
-		return c.JSON(http.StatusBadRequest, response.APIResponse{
-			Message: err.Error(),
-		})
-	}
 	return c.JSON(http.StatusOK, response.APIResponse{
 		Message: "OK",
 		Data:    user,
@@ -108,7 +87,7 @@ func (h *UserHandler) Delete(c echo.Context) error {
 	})
 }
 
-func (h *UserHandler) DeleteByID(c echo.Context) error {
+func (h *UserHandler) GetByID(c echo.Context) error {
 	id, err := h.convertIdToUint(c.Param("id"))
 	if err != nil {
 		h.logger.Error(err)
@@ -116,16 +95,165 @@ func (h *UserHandler) DeleteByID(c echo.Context) error {
 			Message: err.Error(),
 		})
 	}
-	err = h.service.User.DeleteByID(c.Request().Context(), id)
+
+	user, err := h.service.User.GetByID(c.Request().Context(), id)
 	if err != nil {
 		h.logger.Error(err)
-		return c.JSON(http.StatusForbidden, response.APIResponse{
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
 			Message: err.Error(),
 		})
 	}
-	return c.JSON(http.StatusNoContent, response.APIResponse{
-		Message: "deleted",
+	return c.JSON(http.StatusOK, response.APIResponse{
+		Message: "OK",
+		Data:    user,
 	})
+}
+
+func (h *UserHandler) GetStudentTeachersByID(c echo.Context) error {
+	id, err := h.convertIdToUint(c.Param("id"))
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	user, err := h.service.User.GetByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	if user.Role != enum.Student {
+		h.logger.Error("user is not a student")
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: fmt.Sprintf("user with id %v is not a student", user.ID),
+		})
+	}
+	teachers, err := h.service.User.GetStudentTeachersByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response.APIResponse{
+		Message: "OK",
+		Data:    teachers,
+	})
+
+}
+
+func (h *UserHandler) GetStudentGradesByID(c echo.Context) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *UserHandler) GetStudentParentByID(c echo.Context) error {
+	id, err := h.convertIdToUint(c.Param("id"))
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	user, err := h.service.User.GetByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	if user.Role != enum.Student {
+		h.logger.Error("user is not a student")
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: fmt.Sprintf("user with id %v is not a student", user.ID),
+		})
+	}
+	parent, err := h.service.User.GetStudentParentByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response.APIResponse{
+		Message: "OK",
+		Data:    parent,
+	})
+}
+
+func (h *UserHandler) GetParentChildrenByID(c echo.Context) error {
+	id, err := h.convertIdToUint(c.Param("id"))
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	user, err := h.service.User.GetByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+	if user.Role != enum.Parent {
+		h.logger.Error("user is not a parent")
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: fmt.Sprintf("user with id %v is not a parent", user.ID),
+		})
+	}
+	children, err := h.service.User.GetParentChildrenByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response.APIResponse{
+		Message: "OK",
+		Data:    children,
+	})
+}
+
+func (h *UserHandler) GetClassesByID(c echo.Context) error {
+	//id, err := h.convertIdToUint(c.Param("id"))
+	//if err != nil {
+	//	h.logger.Error(err)
+	//	return c.JSON(http.StatusBadRequest, response.APIResponse{
+	//		Message: err.Error(),
+	//	})
+	//}
+	//user, err := h.service.User.GetByID(c.Request().Context(), id)
+	//if err != nil {
+	//	h.logger.Error(err)
+	//	return c.JSON(http.StatusBadRequest, response.APIResponse{
+	//		Message: err.Error(),
+	//	})
+	//}
+	//if user.Role == enum.Parent {
+	//	h.logger.Error("user is not student or teacher")
+	//	return c.JSON(http.StatusBadRequest, response.APIResponse{
+	//		Message: fmt.Sprintf("user with id %v is not student or teacher", user.ID),
+	//	})
+	//}
+	//children, err := h.service.User.(c.Request().Context(), id)
+	//if err != nil {
+	//	h.logger.Error(err)
+	//	return c.JSON(http.StatusBadRequest, response.APIResponse{
+	//		Message: err.Error(),
+	//	})
+	//}
+	//
+	//return c.JSON(http.StatusOK, response.APIResponse{
+	//	Message: "OK",
+	//	Data: children,
+	//})
+	return nil
 }
 
 func (h *UserHandler) convertIdToUint(in string) (uint, error) {
@@ -135,33 +263,4 @@ func (h *UserHandler) convertIdToUint(in string) (uint, error) {
 	}
 
 	return uint(id), err
-}
-
-func (h *UserHandler) GetAllStudents(c echo.Context) error {
-	return nil
-}
-
-func (h *UserHandler) GetStudentByID(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (h *UserHandler) GetStudentTeachersByID(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (h *UserHandler) GetAllParents(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (h *UserHandler) GetParentByID(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (h *UserHandler) GetAllTeachers(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
 }

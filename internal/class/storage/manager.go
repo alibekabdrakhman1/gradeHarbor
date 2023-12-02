@@ -9,7 +9,8 @@ import (
 )
 
 type Repository struct {
-	ClassRepository IClassRepository
+	Class IClassRepository
+	Admin IAdminRepository
 }
 
 func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error) {
@@ -18,7 +19,11 @@ func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error)
 		return nil, err
 	}
 	classRepository := postgre.NewClassRepository(DB)
-	return &Repository{classRepository}, nil
+	adminRepository := postgre.NewAdminRepository(DB)
+	return &Repository{
+		Class: classRepository,
+		Admin: adminRepository,
+	}, nil
 }
 
 func dsn(cfg config.Config) string {
@@ -32,8 +37,22 @@ func dsn(cfg config.Config) string {
 	)
 }
 
+type IAdminRepository interface {
+	CreateClass(ctx context.Context, class model.ClassWithID) (uint, error)
+	GetAllClasses(ctx context.Context) ([]*model.Class, error)
+	GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error)
+	UpdateClassByID(ctx context.Context, id uint, class model.ClassRequest) (*model.ClassWithID, error)
+	DeleteClassByID(ctx context.Context, id uint) error
+	GetClassStudentsByID(ctx context.Context, id uint) ([]*model.User, error)
+	GetClassGradesByID(ctx context.Context, id uint) (*model.Grade, error)
+	GetClassTeacherByID(ctx context.Context, id uint) (*model.User, error)
+}
+
 type IClassRepository interface {
-	GetClass(ctx context.Context, id uint) (model.ClassCreate, error)
-	Create(ctx context.Context, class model.ClassCreate) (uint, error)
-	DeleteClass(ctx context.Context, id uint) error
+	GetAllClasses(ctx context.Context) ([]*model.Class, error)
+	GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error)
+	GetClassStudentsByID(ctx context.Context, id uint) ([]*model.User, error)
+	GetClassGradesByID(ctx context.Context, id uint) (*model.Grade, error)
+	PutClassGradesByID(ctx context.Context, grades model.GradesRequest) error
+	GetClassTeacherByID(ctx context.Context, id uint) (*model.User, error)
 }

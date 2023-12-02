@@ -1,19 +1,32 @@
 package model
 
 type Class struct {
-	Id          uint   `json:"id"`
+	ID          uint   `json:"id"`
 	ClassCode   string `json:"class_code"`
 	ClassName   string `json:"class_name"`
 	Description string `json:"description"`
-	TeacherId   string `json:"teacher_id"`
-	WeekNum     int    `json:"week_num"`
+	TeacherID   User   `json:"teacher_id"`
 }
 
-type ClassCreate struct {
+type ClassRequest struct {
 	ClassCode   string `json:"class_code"`
 	ClassName   string `json:"class_name"`
 	Description string `json:"description"`
-	TeacherID   string `json:"teacher_id"`
-	WeekNum     int    `json:"week_num"`
-	StudentsID  []uint `json:"students_id"`
+	Teacher     User   `json:"teacher"`
+	Students    []User `json:"students"`
+}
+
+type User struct {
+	ID       uint   `json:"id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+}
+
+type ClassWithID struct {
+	ID          uint   `json:"id"`
+	ClassCode   string `json:"class_code"`
+	ClassName   string `json:"class_name"`
+	Description string `json:"description"`
+	Teacher     User   `json:"teacher"`
+	Students    []User `json:"students"`
 }
