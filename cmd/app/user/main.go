@@ -13,7 +13,7 @@ func main() {
 	defer logger.Sync()
 
 	l := logger.Sugar()
-	l = l.With(zap.String("app", "auth-service"))
+	l = l.With(zap.String("app", "user-service"))
 
 	cfg, err := loadConfig("./config/user")
 	if err != nil {

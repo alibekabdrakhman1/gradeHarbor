@@ -37,8 +37,19 @@ func (h *StudentHandler) GetGroupmates(c echo.Context) error {
 }
 
 func (h *StudentHandler) GetGrades(c echo.Context) error {
-	//TODO implement me
-	panic("implement me")
+	grades, err := h.service.Student.GetGrades(c.Request().Context())
+
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, response.APIResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response.APIResponse{
+		Message: "OK",
+		Data:    grades,
+	})
 }
 
 func (h *StudentHandler) GetParent(c echo.Context) error {

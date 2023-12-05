@@ -69,6 +69,9 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 }
 
 func (s *UserTokenService) Register(ctx context.Context, user model.Register) (uint, error) {
+	if user.Role == "admin" {
+		return 0, errors.New("not permitted")
+	}
 	s.logger.Info(user)
 	pass, err := utils.HashPassword(user.Password)
 	if err != nil {

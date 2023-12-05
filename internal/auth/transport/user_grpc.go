@@ -47,6 +47,7 @@ func (t *UserGrpcTransport) CreateUser(ctx context.Context, in *proto.CreateUser
 	}
 	return response, nil
 }
+
 func (t *UserGrpcTransport) GetUserByEmail(ctx context.Context, in *proto.GetUserByEmailRequest, opts ...grpc.CallOption) (*proto.GetUserByEmailResponse, error) {
 	response, err := t.client.GetUserByEmail(ctx, in)
 	if err != nil {

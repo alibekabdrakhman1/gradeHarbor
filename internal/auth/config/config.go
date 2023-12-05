@@ -28,7 +28,7 @@ type HttpServer struct {
 }
 type Transport struct {
 	UserHttpTransport UserHttpTransport `yaml:"UserHttpTransport"`
-	UserGrpcTransport UserGrpcTransport `yaml:"UserGrpcTransport"`
+	UserGrpcTransport UserGrpcTransport `yaml:"ClassGrpcTransport"`
 }
 
 type UserHttpTransport struct {

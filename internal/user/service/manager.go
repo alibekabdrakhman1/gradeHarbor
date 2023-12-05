@@ -16,6 +16,8 @@ type IUserService interface {
 	GetStudentTeachersByID(ctx context.Context, userID uint) ([]*model.UserResponse, error)
 	GetStudentParentByID(ctx context.Context, userID uint) (*model.ParentResponse, error)
 	GetParentChildrenByID(ctx context.Context, userID uint) ([]*model.UserResponse, error)
+	GetUserClassesByID(ctx context.Context, id uint) ([]*model.Class, error)
+	GetStudentGradesByID(ctx context.Context, id uint) ([]*model.Grade, error)
 }
 
 type IAuthService interface {
@@ -33,7 +35,7 @@ type IAdminService interface {
 	GetUserByID(ctx context.Context, id uint) (*model.UserResponse, error)
 	GetStudentTeachersByID(ctx context.Context, id uint) ([]*model.UserResponse, error)
 	GetUserClassesByID(ctx context.Context, id uint) ([]*model.Class, error)
-	//GetStudentGradesByID(ctx context.Context, id uint)
+	GetStudentGradesByID(ctx context.Context, id uint) ([]*model.Grade, error)
 	GetStudentParentByID(ctx context.Context, id uint) (*model.ParentResponse, error)
 	GetParentChildrenByID(ctx context.Context, id uint) ([]*model.UserResponse, error)
 }
@@ -44,17 +46,11 @@ type IParentService interface {
 
 type IStudentService interface {
 	GetGroupmates(ctx context.Context) ([]*model.UserResponse, error)
-	//GetGrades(ctx context.Context) error
-	GetParent(ctx context.Context) ([]*model.ParentResponse, error)
+	GetGrades(ctx context.Context) ([]*model.Grade, error)
+	GetParent(ctx context.Context) (*model.ParentResponse, error)
 	GetTeachers(ctx context.Context) ([]*model.UserResponse, error)
 }
 
 type ITeacherService interface {
 	GetStudents(ctx context.Context) ([]*model.UserResponse, error)
 }
-
-//CreateClass(ctx context.Context, class model.Class) (uint, error)
-//UpdateClass(ctx context.Context, class model.Class) (model.Class, error)
-//DeleteClass(ctx context.Context, id uint) error
-//GetAllClasses(ctx context.Context) ([]model.Class, error)
-//GetClassByID(ctx context.Context, id uint) (model.Class, error)

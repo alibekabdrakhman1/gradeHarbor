@@ -9,6 +9,7 @@ import (
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/controller/http/middleware"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/storage"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/transport"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -35,7 +36,9 @@ func (a *App) Run() error {
 	if err != nil {
 		log.Fatalf("cannot сonnect to mainDB '%s:%d': %v", a.config.Database.Host, a.config.Database.Port, err)
 	}
-	srv := service.NewManager(repository, a.config, a.logger)
+	classGrpcTransport := transport.NewClassGrpcTransport(a.config.Transport.ClassGrpcTransport, a.logger)
+	a.logger.Info("transports success")
+	srv := service.NewManager(repository, a.config, a.logger, classGrpcTransport)
 	grpcServer := grpc.NewServer(srv, &a.config.Transport.UserGrpcTransport)
 	err = grpcServer.Run()
 	if err != nil {

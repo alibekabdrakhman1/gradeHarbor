@@ -12,7 +12,10 @@ type Manager struct {
 }
 
 func NewManager(srv *service.Service, logger *zap.SugaredLogger) *Manager {
-	return &Manager{}
+	return &Manager{
+		Admin: NewAdminHandler(srv, logger),
+		Class: NewClassHandler(srv, logger),
+	}
 }
 
 type IAdminHandler interface {

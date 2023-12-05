@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/service"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
-	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/service"
-	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enum"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enums"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
@@ -58,7 +59,7 @@ func (m *JWTAuth) ValidateAuth(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (m *JWTAuth) ValidateTeacher(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := m.validateRole(c, enum.Teacher); err != nil {
+		if err := m.validateRole(c, enums.Teacher); err != nil {
 			return err
 		}
 		return next(c)
@@ -67,7 +68,7 @@ func (m *JWTAuth) ValidateTeacher(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (m *JWTAuth) ValidateAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := m.validateRole(c, enum.Admin); err != nil {
+		if err := m.validateRole(c, enums.Admin); err != nil {
 			return err
 		}
 		return next(c)
@@ -75,12 +76,13 @@ func (m *JWTAuth) ValidateAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func (m *JWTAuth) validateRole(c echo.Context, expectedRole string) error {
-	role, ok := c.Request().Context().Value(model.ContextUserRoleKey).(*model.ContextUserRole)
-	if !ok {
-		m.logger.Error("not valid context userRole")
-		return errors.New("not valid context userRole")
+	fmt.Println(c.Request().Context().Value(model.ContextUserRoleKey).(*model.ContextUserRole))
+	role, err := utils.GetRoleFromContext(c.Request().Context())
+	if err != nil {
+		m.logger.Error(err)
+		return err
 	}
-	if role.Role != expectedRole {
+	if role != expectedRole {
 		m.logger.Warn(fmt.Sprintf("you are not %v", expectedRole))
 		return echo.NewHTTPError(http.StatusForbidden, fmt.Sprintf("not permitted"))
 	}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/applicator"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/config"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -11,9 +13,9 @@ func main() {
 	defer logger.Sync()
 
 	l := logger.Sugar()
-	l = l.With(zap.String("app", "auth-service"))
+	l = l.With(zap.String("app", "class-service"))
 
-	cfg, err := loadConfig("./config/auth")
+	cfg, err := loadConfig("./config/class")
 	if err != nil {
 		l.Error(err)
 		l.Fatalf("failed to load config err: %v", err)

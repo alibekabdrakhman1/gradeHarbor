@@ -16,3 +16,5 @@ Transport:
     Host: 'http://127.0.0.1:8081'
   UserGrpcTransport:
     Port: ':9090'
+  ClassGrpcTransport:
+    Port: ':9091'

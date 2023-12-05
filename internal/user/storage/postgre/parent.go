@@ -17,6 +17,8 @@ type ParentRepository struct {
 }
 
 func (r *ParentRepository) GetChildren(ctx context.Context, id uint) ([]*model.UserResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	var res []*model.UserResponse
+	err := r.DB.WithContext(ctx).Model(&model.User{}).Where("parent_id = ?", id).Select("id, full_name, email, is_confirmed, parent_id, role").Scan(&res).Error
+
+	return res, err
 }

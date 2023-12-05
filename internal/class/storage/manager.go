@@ -38,7 +38,7 @@ func dsn(cfg config.Config) string {
 }
 
 type IAdminRepository interface {
-	CreateClass(ctx context.Context, class model.ClassWithID) (uint, error)
+	CreateClass(ctx context.Context, class model.ClassRequest) (uint, error)
 	GetAllClasses(ctx context.Context) ([]*model.Class, error)
 	GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error)
 	UpdateClassByID(ctx context.Context, id uint, class model.ClassRequest) (*model.ClassWithID, error)
@@ -49,10 +49,16 @@ type IAdminRepository interface {
 }
 
 type IClassRepository interface {
-	GetAllClasses(ctx context.Context) ([]*model.Class, error)
+	GetClassesForTeacher(ctx context.Context, userID uint) ([]*model.Class, error)
+	GetClassesForStudent(ctx context.Context, userID uint) ([]*model.Class, error)
 	GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error)
 	GetClassStudentsByID(ctx context.Context, id uint) ([]*model.User, error)
-	GetClassGradesByID(ctx context.Context, id uint) (*model.Grade, error)
-	PutClassGradesByID(ctx context.Context, grades model.GradesRequest) error
+	GetClassGradesByIDForStudent(ctx context.Context, id uint, userID uint) (*model.Grade, error)
+	GetClassGradesByIDForTeacher(ctx context.Context, id uint, userID uint) (*model.Grade, error)
+	PutClassGradesByID(ctx context.Context, id uint, grades model.GradesRequest) error
 	GetClassTeacherByID(ctx context.Context, id uint) (*model.User, error)
+	GetStudentGradesByID(ctx context.Context, studentID uint) ([]*model.Grade, error)
+	GetMyStudentsForStudent(ctx context.Context, id uint) ([]uint, error)
+	GetMyStudentsForTeacher(ctx context.Context, id uint) ([]uint, error)
+	GetMyTeachers(ctx context.Context, id uint) ([]uint, error)
 }

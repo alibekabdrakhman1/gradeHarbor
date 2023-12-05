@@ -8,7 +8,6 @@ import (
 type UserToken struct {
 	ID           uint      `gorm:"primary_key;auto_increment" json:"id"`
 	UserID       uint      `gorm:"unique;not null" json:"full_name"`
-	Email        string    `gorm:"unique;not null" json:"email"`
 	Role         string    `gorm:"not null" json:"role"`
 	AccessToken  string    `gorm:"unique;not null" json:"access_token"`
 	RefreshToken string    `gorm:"unique;not null" json:"refresh_token"`
@@ -26,7 +25,6 @@ type TokenResponse struct {
 
 type JWTClaim struct {
 	UserID         uint   `json:"user_id"`
-	Email          string `json:"email"`
 	Role           string `json:"role"`
 	StandardClaims jwt.StandardClaims
 }

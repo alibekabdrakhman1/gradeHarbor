@@ -55,11 +55,6 @@ type IAdminHandler interface {
 	GetAllStudents(c echo.Context) error
 	GetAllTeachers(c echo.Context) error
 	GetAllParents(c echo.Context) error
-	//CreateClass(c echo.Context) error
-	//UpdateClass(c echo.Context) error
-	//DeleteClass(c echo.Context) error
-	//GetAllClasses(c echo.Context) error
-	//GetClassByID(c echo.Context) error
 	DeleteUser(c echo.Context) error
 	PutParent(c echo.Context) error
 	CreateAdmin(c echo.Context) error

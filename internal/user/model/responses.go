@@ -1,11 +1,11 @@
 package model
 
 type ParentResponse struct {
-	ID          uint           `gorm:"primary_key;auto_increment" json:"id"`
-	FullName    string         `gorm:"not null" json:"full_name"`
-	Email       string         `gorm:"unique;not null" json:"email"`
-	IsConfirmed bool           `json:"is_confirmed"`
-	Children    []UserResponse `json:"children"`
+	ID          uint            `gorm:"primary_key;auto_increment" json:"id"`
+	FullName    string          `gorm:"not null" json:"full_name"`
+	Email       string          `gorm:"unique;not null" json:"email"`
+	IsConfirmed bool            `json:"is_confirmed"`
+	Children    []*UserResponse `json:"children"`
 }
 
 type UserResponse struct {
@@ -13,7 +13,7 @@ type UserResponse struct {
 	FullName    string `gorm:"not null" json:"full_name"`
 	Email       string `gorm:"unique;not null" json:"email"`
 	IsConfirmed bool   `json:"is_confirmed"`
-	ParentID    string `json:"parent_id"`
+	ParentID    uint   `json:"parent_id"`
 	Role        string `gorm:"not null" json:"role"`
 }
 
@@ -29,7 +29,7 @@ type StudentResponse struct {
 	FullName    string         `gorm:"not null" json:"full_name"`
 	Email       string         `gorm:"unique;not null" json:"email"`
 	IsConfirmed bool           `json:"is_confirmed"`
-	ParentID    string         `json:"parent_id"`
+	ParentID    uint           `json:"parent_id"`
 	Classes     []Class        `json:"classes"`
 	Teachers    []UserResponse `json:"teachers"`
 }

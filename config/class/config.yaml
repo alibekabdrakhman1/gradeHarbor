@@ -1,0 +1,29 @@
+Auth:
+  JwtSecretKey: "JwtKey"
+  PasswordSecretKey: "lakjdlajsdladandal"
+HttpServer:
+  Port: 8082
+  ShutdownTimeout: 2s
+Database:
+  Host: 'localhost'
+  Port: '5432'
+  User: 'postgres'
+  Password: 'qwerty'
+  Name: 'justcode'
+  SslMode: 'disable'
+Transport:
+  UserHttpTransport:
+    Host: "http://127.0.0.1:8081"
+    Timeout: 5s
+  UserGrpcTransport:
+    Port: ":9090"
+  ClassGrpcTransport:
+    Port: ":9091"
+Kafka:
+  Brokers:
+    - 127.0.0.1:19092
+  Producer:
+    topic: "user-verification"
+  Consumer:
+    topics:
+      - "user-verification"

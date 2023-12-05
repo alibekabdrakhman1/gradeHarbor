@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option go_package = "./pkg/proto/class";
+
+message MyUsersRequest {
+  uint32 id = 1;
+  string role = 2;
+}
+
+message MyUsersResponse {
+  repeated uint32 students = 1;
+  repeated uint32 teachers = 2;
+}
+
+message ClassRequest {
+  uint32 id = 1;
+  string role = 2;
+}
+
+message ClassResponse {
+  repeated Class classes = 1;
+}
+
+message Class {
+  uint32 id = 1;
+  string classCode = 2;
+  string className = 3;
+  string description = 4;
+  uint32 teacherId = 5;
+}
+
+message GradesRequest {
+  uint32 id = 1;
+}
+
+message GradesResponse {
+  repeated Grades grades = 1;
+}
+
+message Grades {
+  uint32 classId = 1;
+  string classCode = 2;
+  string className = 3;
+  uint32 teacherId = 4;
+  repeated GradeStudent students = 5;
+}
+
+message GradeStudent {
+  uint32 id = 1;
+  string fullName = 2;
+  repeated GradeResponse grades = 3;
+}
+
+message GradeResponse {
+  int32 grade = 1;
+  int32 week = 2;
+}
+
+service ClassService {
+  rpc GetMyUsers(MyUsersRequest) returns(MyUsersResponse) {}
+  rpc GetClasses(ClassRequest) returns(ClassResponse) {}
+  rpc GetGrades(GradesRequest) returns(GradesResponse) {}
+}

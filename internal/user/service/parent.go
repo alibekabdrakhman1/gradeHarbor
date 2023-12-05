@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/storage"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -25,13 +25,12 @@ type ParentService struct {
 }
 
 func (s *ParentService) GetChildren(ctx context.Context) ([]*model.UserResponse, error) {
-	id, ok := ctx.Value(model.ContextUserIDKey).(*model.ContextUserID)
-	if !ok {
-		s.logger.Error("not valid context userID")
-		return nil, errors.New("not valid context userID")
+	id, err := utils.GetIDFromContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	children, err := s.repository.Parent.GetChildren(ctx, id.ID)
+	children, err := s.repository.Parent.GetChildren(ctx, id)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("getting parent children error: %v", err))
 		return nil, fmt.Errorf("getting parent children error: %v", err)

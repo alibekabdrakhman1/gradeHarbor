@@ -26,14 +26,14 @@ type HttpServer struct {
 	ShutdownTimeout time.Duration `yaml:"ShutdownTimeout"`
 }
 type Transport struct {
-	UserHttpTransport UserHttpTransport `yaml:"UserHttpTransport"`
-	UserGrpcTransport UserGrpcTransport `yaml:"UserGrpcTransport"`
+	UserHttpTransport  UserHttpTransport  `yaml:"UserHttpTransport"`
+	ClassGrpcTransport ClassGrpcTransport `yaml:"ClassGrpcTransport"`
 }
 
 type UserHttpTransport struct {
 	Host string `yaml:"Host"`
 }
 
-type UserGrpcTransport struct {
+type ClassGrpcTransport struct {
 	Port string `yaml:"Port"`
 }

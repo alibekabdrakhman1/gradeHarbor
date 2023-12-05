@@ -16,17 +16,17 @@ type StudentRepository struct {
 	DB *gorm.DB
 }
 
-func (r *StudentRepository) GetGroupmates(ctx context.Context, id uint) ([]*model.UserResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
+func (r *StudentRepository) GetParent(ctx context.Context, id uint) (*model.ParentResponse, error) {
+	var parent model.ParentResponse
 
-func (r *StudentRepository) GetParent(ctx context.Context, id uint) ([]*model.ParentResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
+	if err := r.DB.WithContext(ctx).Where("id = (SELECT parent_id FROM users WHERE id = ?)", id).First(&parent).Error; err != nil {
+		return nil, err
+	}
+	var children []*model.UserResponse
 
-func (r *StudentRepository) GetTeachers(ctx context.Context, id uint) ([]*model.UserResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	if err := r.DB.WithContext(ctx).Where("parent_id = ?", id).Find(&children).Error; err != nil {
+		return nil, err
+	}
+	parent.Children = children
+	return &parent, nil
 }
