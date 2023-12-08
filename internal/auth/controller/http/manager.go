@@ -18,5 +18,5 @@ type IUserTokenHandler interface {
 	Login(c echo.Context) error
 	Register(c echo.Context) error
 	RefreshToken(c echo.Context) error
-	Verify(c echo.Context) error
+	Confirm(c echo.Context) error
 }

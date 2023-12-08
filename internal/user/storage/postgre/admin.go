@@ -3,6 +3,7 @@ package postgre
 import (
 	"context"
 	"errors"
+
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enums"
 	"gorm.io/gorm"
@@ -32,23 +33,20 @@ func (r *AdminRepository) GetAllStudents(ctx context.Context) ([]*model.UserResp
 	return res, err
 }
 
-func (r *AdminRepository) GetAllParents(ctx context.Context) ([]*model.ParentResponse, error) {
-	var parents []*model.ParentResponse
+func (r *AdminRepository) GetAllParents(ctx context.Context) ([]*model.UserResponse, error) {
+	var parents []*model.UserResponse
+	err := r.DB.WithContext(ctx).Model(&model.User{}).Where("role = ?", enums.Parent).Select("id, full_name, email, is_confirmed, parent_id, role").Scan(&parents).Error
 
-	if err := r.DB.WithContext(ctx).Find(&parents).Error; err != nil {
-		return nil, err
-	}
+	// for _, parent := range parents {
+	//	children, err := r.GetParentChildrenByID(ctx, parent.ID)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	//	parent.Children = children
+	//}
 
-	for _, parent := range parents {
-		children, err := r.GetParentChildrenByID(ctx, parent.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		parent.Children = children
-	}
-
-	return parents, nil
+	return parents, err
 }
 
 func (r *AdminRepository) DeleteUserByID(ctx context.Context, id uint) error {
@@ -73,19 +71,33 @@ func (r *AdminRepository) PutParent(ctx context.Context, studentID uint, parentI
 }
 
 func (r *AdminRepository) GetUserByID(ctx context.Context, id uint) (*model.UserResponse, error) {
-	var res *model.UserResponse
-	err := r.DB.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Select("id, full_name, email, is_confirmed, parent_id, role").Scan(&res).Error
-
-	return res, err
+	var user model.User
+	err := r.DB.WithContext(ctx).Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &model.UserResponse{
+		ID:          user.ID,
+		FullName:    user.FullName,
+		Email:       user.Email,
+		IsConfirmed: user.IsConfirmed,
+		ParentID:    user.ParentID,
+		Role:        user.Role,
+	}, err
 }
 
 func (r *AdminRepository) GetStudentParentByID(ctx context.Context, id uint) (*model.ParentResponse, error) {
-	var parent model.ParentResponse
-
-	if err := r.DB.WithContext(ctx).Where("id = (SELECT parent_id FROM users WHERE id = ?)", id).First(&parent).Error; err != nil {
+	var user model.User
+	err := r.DB.WithContext(ctx).Where("id = (SELECT parent_id FROM users WHERE id = ?)", id).First(&user).Error
+	if err != nil {
 		return nil, err
 	}
-	var err error
+	parent := model.ParentResponse{
+		ID:          user.ID,
+		FullName:    user.FullName,
+		Email:       user.Email,
+		IsConfirmed: user.IsConfirmed,
+	}
 	parent.Children, err = r.GetParentChildrenByID(ctx, parent.ID)
 	if err != nil {
 		return nil, err
@@ -97,7 +109,7 @@ func (r *AdminRepository) GetStudentParentByID(ctx context.Context, id uint) (*m
 func (r *AdminRepository) GetParentChildrenByID(ctx context.Context, id uint) ([]*model.UserResponse, error) {
 	var children []*model.UserResponse
 
-	if err := r.DB.WithContext(ctx).Where("parent_id = ?", id).Find(&children).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Model(&model.User{}).Where("parent_id = ?", id).Find(&children).Error; err != nil {
 		return nil, err
 	}
 

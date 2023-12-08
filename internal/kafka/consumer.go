@@ -19,11 +19,7 @@ type Consumer struct {
 	callback ConsumerCallback
 }
 
-func NewConsumer(
-	logger *zap.SugaredLogger,
-	cfg config.Kafka,
-	callback ConsumerCallback,
-) (*Consumer, error) {
+func NewConsumer(logger *zap.SugaredLogger, cfg config.Kafka, callback ConsumerCallback) (*Consumer, error) {
 	samaraCfg := sarama.NewConfig()
 	samaraCfg.ClientID = "go-kafka-consumer"
 	samaraCfg.Consumer.Return.Errors = true

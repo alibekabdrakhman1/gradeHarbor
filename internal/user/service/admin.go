@@ -48,7 +48,7 @@ func (s *AdminService) GetAllStudents(ctx context.Context) ([]*model.UserRespons
 	return students, nil
 }
 
-func (s *AdminService) GetAllParents(ctx context.Context) ([]*model.ParentResponse, error) {
+func (s *AdminService) GetAllParents(ctx context.Context) ([]*model.UserResponse, error) {
 	parents, err := s.repository.Admin.GetAllParents(ctx)
 	if err != nil {
 		s.logger.Error(err)

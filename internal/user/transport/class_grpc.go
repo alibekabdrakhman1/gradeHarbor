@@ -57,6 +57,7 @@ func (t *ClassGrpcTransport) GetClasses(ctx context.Context, in *proto.ClassRequ
 func (t *ClassGrpcTransport) GetGrades(ctx context.Context, in *proto.GradesRequest, opts ...grpc.CallOption) (*proto.GradesResponse, error) {
 	grades, err := t.client.GetGrades(ctx, in, opts...)
 	if err != nil {
+		fmt.Println("----")
 		return nil, err
 	}
 

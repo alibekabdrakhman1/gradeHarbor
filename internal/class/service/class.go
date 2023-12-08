@@ -163,7 +163,7 @@ func (s *ClassService) GetClassTeacherByID(ctx context.Context, id uint) (*model
 		s.logger.Error(err)
 		return nil, err
 	}
-
+	fmt.Println(userID, role)
 	err = s.checkPermission(ctx, role, userID, id)
 	if err != nil {
 		s.logger.Error(err)
@@ -190,7 +190,7 @@ func (s *ClassService) GetMyTeachers(ctx context.Context, userID uint) ([]uint, 
 
 func (s *ClassService) checkPermission(ctx context.Context, role string, userID uint, classID uint) error {
 	if role == enums.Teacher {
-		teacher, err := s.GetClassTeacherByID(ctx, classID)
+		teacher, err := s.repository.Class.GetClassTeacherByID(ctx, classID)
 		if err != nil {
 			return fmt.Errorf("getting class teacher error: %v", err)
 		}
@@ -200,7 +200,7 @@ func (s *ClassService) checkPermission(ctx context.Context, role string, userID 
 		}
 		return nil
 	} else {
-		students, err := s.GetClassStudentsByID(ctx, classID)
+		students, err := s.repository.Class.GetClassStudentsByID(ctx, classID)
 		if err != nil {
 			return fmt.Errorf("getting class students error: %v", err)
 		}

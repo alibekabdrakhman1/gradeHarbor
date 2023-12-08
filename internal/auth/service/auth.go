@@ -2,36 +2,42 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/dto"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/storage"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/auth/transport"
+	"github.com/alibekabdrakhman1/gradeHarbor/internal/kafka"
+	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enums"
 	proto "github.com/alibekabdrakhman1/gradeHarbor/pkg/proto/user"
 	"github.com/alibekabdrakhman1/gradeHarbor/pkg/utils"
 	"github.com/golang-jwt/jwt"
 	"go.uber.org/zap"
+	"math/rand"
 	"time"
 )
 
 type UserTokenService struct {
-	repository        *storage.Repository
-	jwtSecretKey      string
-	passwordSecretKey string
-	userHttpTransport *transport.UserHttpTransport
-	userGrpcTransport *transport.UserGrpcTransport
-	logger            *zap.SugaredLogger
+	repository               *storage.Repository
+	jwtSecretKey             string
+	passwordSecretKey        string
+	userHttpTransport        *transport.UserHttpTransport
+	userGrpcTransport        *transport.UserGrpcTransport
+	userVerificationProducer *kafka.Producer
+	logger                   *zap.SugaredLogger
 }
 
 func NewUserTokenService(dto *dto.UserTokenServiceDTO) *UserTokenService {
 	return &UserTokenService{
-		repository:        dto.Repository,
-		jwtSecretKey:      dto.JwtSecretKey,
-		passwordSecretKey: dto.PasswordSecretKey,
-		userHttpTransport: dto.UserHttpTransport,
-		userGrpcTransport: dto.UserGrpcTransport,
-		logger:            dto.Logger,
+		repository:               dto.Repository,
+		jwtSecretKey:             dto.JwtSecretKey,
+		passwordSecretKey:        dto.PasswordSecretKey,
+		userHttpTransport:        dto.UserHttpTransport,
+		userGrpcTransport:        dto.UserGrpcTransport,
+		logger:                   dto.Logger,
+		userVerificationProducer: dto.UserVerificationProducer,
 	}
 }
 
@@ -69,8 +75,11 @@ func (s *UserTokenService) Login(ctx context.Context, login model.Login) (*model
 }
 
 func (s *UserTokenService) Register(ctx context.Context, user model.Register) (uint, error) {
-	if user.Role == "admin" {
+	if user.Role == enums.Admin {
 		return 0, errors.New("not permitted")
+	}
+	if user.Role != enums.Student && user.Role != enums.Teacher {
+		return 0, errors.New("user role is not correct")
 	}
 	s.logger.Info(user)
 	pass, err := utils.HashPassword(user.Password)
@@ -91,12 +100,44 @@ func (s *UserTokenService) Register(ctx context.Context, user model.Register) (u
 		s.logger.Error(err)
 		return 0, err
 	}
+	rand.Seed(time.Now().UnixNano())
+	code := rand.Intn(9000) + 1000
+	msg := model.Message{
+		Email: user.Email,
+		Code:  fmt.Sprintf("%d", code),
+	}
+	str, err := json.Marshal(msg)
+	if err != nil {
+		return uint(res.GetId()), err
+	}
+
+	err = s.repository.UserToken.CreateUserMessage(ctx, msg)
+	if err != nil {
+		return 0, err
+	}
+
+	s.userVerificationProducer.ProduceMessage(str)
+
 	return uint(res.GetId()), nil
 }
 
-func (s *UserTokenService) Verify(ctx context.Context, email string, code string) error {
-	//TODO implement me
-	panic("implement me")
+func (s *UserTokenService) Confirm(ctx context.Context, email string, code string) error {
+	confirmCode, err := s.repository.UserToken.GetUserMessage(ctx, email)
+	if err != nil {
+		return fmt.Errorf("message getting error: %v", err)
+	}
+	if confirmCode != code {
+		return errors.New("wrong confirm code")
+	}
+	_, err = s.userGrpcTransport.ConfirmUser(ctx, &proto.ConfirmUserRequest{Email: email})
+	if err != nil {
+		return err
+	}
+	err = s.repository.UserToken.DeleteUserMessage(ctx, email)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *UserTokenService) RefreshToken(ctx context.Context, refreshToken string) (*model.JwtTokens, error) {

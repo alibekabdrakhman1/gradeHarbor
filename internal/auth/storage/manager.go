@@ -26,13 +26,20 @@ type Repository struct {
 type IUserTokenRepository interface {
 	CreateUserToken(ctx context.Context, userToken model.UserToken) error
 	UpdateUserToken(ctx context.Context, userToken model.UserToken) error
+	CreateUserMessage(ctx context.Context, message model.Message) error
+	DeleteUserMessage(ctx context.Context, email string) error
+	GetUserMessage(ctx context.Context, email string) (string, error)
 }
 
 func NewRepository(ctx context.Context, cfg *config.Config, logger *zap.SugaredLogger) (*Repository, error) {
-	DB, err := postgre.Dial(ctx, dsn(*cfg))
+	postgresDB, err := postgre.Dial(ctx, dsn(*cfg))
+	fmt.Println(dsn(*cfg))
 	if err != nil {
 		return nil, err
 	}
-	userToken := postgre.NewUserTokenRepository(DB, logger)
-	return &Repository{UserToken: userToken}, nil
+	userToken := postgre.NewUserTokenRepository(postgresDB, logger)
+
+	return &Repository{
+		UserToken: userToken,
+	}, nil
 }

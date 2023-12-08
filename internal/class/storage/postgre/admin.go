@@ -3,11 +3,10 @@ package postgre
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"time"
+
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/model"
 	"github.com/jmoiron/sqlx"
-	"sync"
-	"time"
 )
 
 func NewAdminRepository(db *sqlx.DB) *AdminRepository {
@@ -21,53 +20,20 @@ type AdminRepository struct {
 }
 
 func (r *AdminRepository) CreateClass(ctx context.Context, class model.ClassRequest) (uint, error) {
-	var wg sync.WaitGroup
-
-	results := make(chan uint, 1)
-	errorsChan := make(chan error, 3)
-
-	var classID uint
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		id, err := r.createClass(ctx, &class)
-		if err != nil {
-			errorsChan <- err
-			return
-		}
-		classID = id
-		results <- classID
-		err = r.createStudents(ctx, class.Students, <-results)
-		if err != nil {
-			errorsChan <- err
-			return
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := r.createRelationships(ctx, class.Teacher.ID, class.Students)
-		if err != nil {
-			errorsChan <- err
-			return
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(errorsChan)
-	}()
-
-	wg.Wait()
-
-	for err := range errorsChan {
-		if err != nil {
-			return 0, err
-		}
+	id, err := r.createClass(ctx, &class)
+	if err != nil {
+		return 0, err
+	}
+	err = r.createStudents(ctx, class.Students, id)
+	if err != nil {
+		return 0, err
+	}
+	err = r.createRelationships(ctx, class.Teacher.ID, class.Students, id)
+	if err != nil {
+		return 0, err
 	}
 
-	return classID, nil
+	return id, nil
 }
 
 func (r *AdminRepository) GetAllClasses(ctx context.Context) ([]*model.Class, error) {
@@ -81,11 +47,10 @@ func (r *AdminRepository) GetAllClasses(ctx context.Context) ([]*model.Class, er
 }
 
 func (r *AdminRepository) GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error) {
-	var res *model.ClassWithID
+	var res model.ClassWithID
 	var class model.Class
 	classQuery := "SELECT * FROM class WHERE id = $1"
 	err := r.DB.GetContext(ctx, &class, classQuery, id)
-	fmt.Println(class)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +75,7 @@ func (r *AdminRepository) GetClassByID(ctx context.Context, id uint) (*model.Cla
 		})
 	}
 
-	return res, nil
+	return &res, nil
 }
 
 func (r *AdminRepository) UpdateClassByID(ctx context.Context, id uint, class model.ClassRequest) (*model.ClassWithID, error) {
@@ -171,7 +136,7 @@ func (r *AdminRepository) GetClassStudentsByID(ctx context.Context, id uint) ([]
 
 	for _, student := range students {
 		response = append(response, &model.User{
-			ID:       student.StudentId,
+			ID:       student.StudentID,
 			FullName: student.StudentName,
 		})
 	}
@@ -263,7 +228,6 @@ func (r *AdminRepository) GetClassTeacherByID(ctx context.Context, id uint) (*mo
 func (r *AdminRepository) createClass(ctx context.Context, classRequest *model.ClassRequest) (uint, error) {
 	tx, err := r.DB.Beginx()
 	if err != nil {
-
 		return 0, err
 	}
 	defer tx.Rollback()
@@ -305,7 +269,7 @@ func (r *AdminRepository) createStudents(ctx context.Context, students []model.U
 	return nil
 }
 
-func (r *AdminRepository) createRelationships(ctx context.Context, teacherID uint, students []model.User) error {
+func (r *AdminRepository) createRelationships(ctx context.Context, teacherID uint, students []model.User, classID uint) error {
 	tx, err := r.DB.Beginx()
 	if err != nil {
 		return err
@@ -313,9 +277,8 @@ func (r *AdminRepository) createRelationships(ctx context.Context, teacherID uin
 	defer tx.Rollback()
 
 	for _, student := range students {
-		query := `INSERT INTO relationships (student_id, teacher_id) VALUES ($1, $2)`
-		_, _ = tx.ExecContext(ctx, query, student.ID, teacherID)
-
+		query := `INSERT INTO relationships (student_id, teacher_id, class_id) VALUES ($1, $2, $3)`
+		_, _ = tx.ExecContext(ctx, query, student.ID, teacherID, classID)
 	}
 
 	err = tx.Commit()

@@ -28,6 +28,21 @@ func NewUserService(r *storage.Repository, logger *zap.SugaredLogger, grpcTransp
 	}
 }
 
+func (s *UserService) ConfirmUser(ctx context.Context, email string) error {
+	user, err := s.GetByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	if user.IsConfirmed {
+		return errors.New("user already confirmed")
+	}
+
+	err = s.repository.User.ConfirmUser(ctx, email)
+
+	return err
+}
+
 func (s *UserService) Create(ctx context.Context, user model.User) (uint, error) {
 	user.ParentID = 0
 	user.IsConfirmed = false
@@ -44,11 +59,7 @@ func (s *UserService) GetByID(ctx context.Context, userID uint) (*model.UserResp
 	if err != nil {
 		return nil, err
 	}
-	id, err := utils.GetIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	user, err := s.repository.User.GetProfileById(ctx, id)
+	user, err := s.repository.User.GetById(ctx, userID)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("GetProfileByID error: %v", err))
 		return nil, fmt.Errorf("GetProfileByID error: %v", err)
@@ -158,7 +169,7 @@ func (s *UserService) GetStudentTeachersByID(ctx context.Context, userID uint) (
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println(users)
 	var teachers []*model.UserResponse
 
 	for _, val := range users["teacher"] {
@@ -178,10 +189,6 @@ func (s *UserService) GetStudentParentByID(ctx context.Context, userID uint) (*m
 	if err != nil {
 		return nil, err
 	}
-	id, err := utils.GetIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
 	user, err := s.repository.User.GetById(ctx, userID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("getting by id error: %v", err))
@@ -192,7 +199,7 @@ func (s *UserService) GetStudentParentByID(ctx context.Context, userID uint) (*m
 		return nil, errors.New("user is not a student")
 	}
 
-	parent, err := s.repository.User.GetStudentParentByID(ctx, id)
+	parent, err := s.repository.User.GetStudentParentByID(ctx, user.ID)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("getting student parent error: %v", err))
 		return nil, fmt.Errorf("getting student parent error: %v", err)
@@ -236,7 +243,9 @@ func (s *UserService) checkPermission(ctx context.Context, id uint, role string)
 	}
 	if role == "" {
 		for _, ids := range users {
+			fmt.Println(ids)
 			for _, val := range ids {
+				fmt.Println(val)
 				if val == id {
 					return nil
 				}
@@ -255,25 +264,76 @@ func (s *UserService) checkPermission(ctx context.Context, id uint, role string)
 }
 
 func (s *UserService) GetUserClassesByID(ctx context.Context, id uint) ([]*model.Class, error) {
-	user, err := s.GetByID(ctx, id)
+	user, err := s.repository.User.GetById(ctx, id)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+	if user.Role == enums.Parent {
+		s.logger.Error("user is not student or teacher")
+		return nil, errors.New(fmt.Sprintf("user with id %v is not student or teacher", user.ID))
+	}
+	role, err := utils.GetRoleFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	currID, _ := utils.GetIDFromContext(ctx)
+
+	if role == enums.Parent && user.Role == enums.Student {
+		parent, err := s.repository.User.GetStudentParentByID(ctx, user.ID)
+		if err != nil {
+			return nil, err
+		}
+		if parent.ID != currID {
+			return nil, errors.New("not permitted")
+		}
+	} else {
+		err = s.checkPermission(ctx, user.ID, user.Role)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s.getClasses(ctx, id, user.Role)
 }
 
-func (s *UserService) GetStudentGradesByID(ctx context.Context, id uint) ([]*model.Grade, error) {
-	user, err := s.GetByID(ctx, id)
+func (s *UserService) GetStudentGradesByID(ctx context.Context, studentID uint) ([]*model.Grade, error) {
+	user, err := s.repository.User.GetById(ctx, studentID)
 	if err != nil {
+		s.logger.Error(err)
 		return nil, err
 	}
-
-	if user.Role == enums.Parent {
-		return nil, errors.New("user role cannot be parent")
+	if user.Role != enums.Student {
+		s.logger.Error("user is not a student")
+		return nil, errors.New("user is not a student")
 	}
-
-	grades, err := s.getGrades(ctx, id)
+	role, err := utils.GetRoleFromContext(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+	if role == enums.Parent {
+		id, err := utils.GetIDFromContext(ctx)
+		if err != nil {
+			s.logger.Error(err)
+			return nil, err
+		}
+		parent, err := s.repository.User.GetStudentParentByID(ctx, studentID)
+		if err != nil {
+			s.logger.Error(err)
+			return nil, err
+		}
+		if parent.ID != id {
+			s.logger.Error(errors.New("not permitted"))
+			return nil, errors.New("not Permitted")
+		}
+	} else {
+		err := s.checkPermission(ctx, studentID, enums.Student)
+		if err != nil {
+			return nil, err
+		}
+	}
+	grades, err := s.getGrades(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +370,7 @@ func (s *UserService) getMyUsersID(ctx context.Context) (map[string][]uint, erro
 		teachers = append(teachers, uint(v))
 	}
 	for _, v := range users.Students {
-		parent, err := s.GetStudentParentByID(ctx, uint(v))
+		parent, err := s.repository.User.GetStudentParentByID(ctx, uint(v))
 		if err != nil {
 			return nil, err
 		}
@@ -325,6 +385,7 @@ func (s *UserService) getMyUsersID(ctx context.Context) (map[string][]uint, erro
 
 func (s *UserService) getGrades(ctx context.Context, id uint) ([]*model.Grade, error) {
 	grades, err := s.classGrpcTransport.GetGrades(ctx, &proto.GradesRequest{Id: uint32(id)})
+	s.logger.Info(id)
 	if err != nil {
 		return nil, err
 	}

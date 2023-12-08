@@ -1,18 +1,19 @@
 package model
 
 import (
-	"github.com/golang-jwt/jwt"
 	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 type UserToken struct {
 	ID           uint      `gorm:"primary_key;auto_increment" json:"id"`
-	UserID       uint      `gorm:"unique;not null" json:"full_name"`
-	Role         string    `gorm:"not null" json:"role"`
-	AccessToken  string    `gorm:"unique;not null" json:"access_token"`
-	RefreshToken string    `gorm:"unique;not null" json:"refresh_token"`
-	CreatedAt    time.Time `gorm:"default:current_timestamp" json:"created_at"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime:milli" json:"updated_at"`
+	UserID       uint      `gorm:"unique;not null"            json:"full_name"`
+	Role         string    `gorm:"not null"                   json:"role"`
+	AccessToken  string    `gorm:"unique;not null"            json:"access_token"`
+	RefreshToken string    `gorm:"unique;not null"            json:"refresh_token"`
+	CreatedAt    time.Time `gorm:"default:current_timestamp"  json:"created_at"`
+	UpdatedAt    time.Time `gorm:"autoUpdateTime:milli"       json:"updated_at"`
 }
 
 type TokenResponse struct {

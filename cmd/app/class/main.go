@@ -8,6 +8,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// @title Class Service
+// @version 1.0
+// @description Class Service
+
+// @host localhost:8082
+// @BasePath /
+
+// @securityDefinitions.apikey	BearerAuth
+// @name Authorization
+// @in header
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()

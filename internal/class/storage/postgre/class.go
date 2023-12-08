@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"time"
+
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/model"
 	"github.com/jmoiron/sqlx"
-	"time"
 )
 
 func NewClassRepository(db *sqlx.DB) *ClassRepository {
@@ -56,7 +58,7 @@ func (r *ClassRepository) GetClassesForStudent(ctx context.Context, userID uint)
 
 	var classes []*model.Class
 	for rows.Next() {
-		var class *model.Class
+		var class model.Class
 		if err := rows.Scan(
 			&class.ID,
 			&class.ClassCode,
@@ -67,7 +69,7 @@ func (r *ClassRepository) GetClassesForStudent(ctx context.Context, userID uint)
 		); err != nil {
 			return nil, err
 		}
-		classes = append(classes, class)
+		classes = append(classes, &class)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -78,7 +80,7 @@ func (r *ClassRepository) GetClassesForStudent(ctx context.Context, userID uint)
 }
 
 func (r *ClassRepository) GetClassByID(ctx context.Context, id uint) (*model.ClassWithID, error) {
-	var res *model.ClassWithID
+	var res model.ClassWithID
 	var class model.Class
 	classQuery := "SELECT * FROM class WHERE id = $1"
 	err := r.DB.GetContext(ctx, &class, classQuery, id)
@@ -86,13 +88,14 @@ func (r *ClassRepository) GetClassByID(ctx context.Context, id uint) (*model.Cla
 		return nil, err
 	}
 
-	var students []model.User
+	var students []model.ClassStudent
 	studentsQuery := "SELECT student_id, student_name FROM student WHERE class_id = $1"
-	err = r.DB.GetContext(ctx, &students, studentsQuery, id)
+	err = r.DB.SelectContext(ctx, &students, studentsQuery, id)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println(students)
+	fmt.Println(class)
 	res.ID = class.ID
 	res.ClassName = class.ClassName
 	res.ClassCode = class.ClassCode
@@ -102,18 +105,18 @@ func (r *ClassRepository) GetClassByID(ctx context.Context, id uint) (*model.Cla
 	}
 	for _, student := range students {
 		res.Students = append(res.Students, model.User{
-			ID:       student.ID,
-			FullName: student.FullName,
+			ID:       student.StudentID,
+			FullName: student.StudentName,
 		})
 	}
 
-	return res, nil
+	return &res, nil
 }
 
 func (r *ClassRepository) GetClassStudentsByID(ctx context.Context, id uint) ([]*model.User, error) {
 	var students []model.ClassStudent
 	classQuery := "SELECT student_id, student_name FROM student WHERE class_id = $1"
-	err := r.DB.GetContext(ctx, &students, classQuery, id)
+	err := r.DB.SelectContext(ctx, &students, classQuery, id)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +125,7 @@ func (r *ClassRepository) GetClassStudentsByID(ctx context.Context, id uint) ([]
 
 	for _, student := range students {
 		response = append(response, &model.User{
-			ID:       student.StudentId,
+			ID:       student.StudentID,
 			FullName: student.StudentName,
 		})
 	}
@@ -244,10 +247,10 @@ ORDER BY
 		Week         sql.NullInt64 `db:"week"`
 		LastModified time.Time     `db:"last_modified"`
 	}
-
 	if err := r.DB.SelectContext(ctx, &grades, query, id); err != nil {
 		return nil, err
 	}
+	fmt.Println(grades)
 
 	if grades[0].TeacherID != userID {
 		return nil, errors.New("another teacher id")
@@ -274,6 +277,7 @@ ORDER BY
 				LastModified: row.LastModified,
 			})
 		}
+		classGrades.Students = append(classGrades.Students, *student)
 	}
 
 	return classGrades, nil
@@ -295,32 +299,32 @@ func (r *ClassRepository) PutClassGradesByID(ctx context.Context, id uint, grade
 }
 
 func (r *ClassRepository) GetClassTeacherByID(ctx context.Context, id uint) (*model.User, error) {
-	var class model.Class
-	classQuery := "SELECT teacher_id, teacher_name FROM class WHERE id = $1"
+	var class model.User
+	fmt.Println(id, "----")
+	classQuery := "SELECT teacher_id as id, teacher_name as full_name FROM class WHERE id = $1"
 	err := r.DB.GetContext(ctx, &class, classQuery, id)
+	fmt.Println(class, "_---")
 	if err != nil {
 		return nil, err
 	}
 
 	return &model.User{
-		ID:       class.TeacherID,
-		FullName: class.TeacherName,
+		ID:       class.ID,
+		FullName: class.FullName,
 	}, nil
 }
 
 func (r *ClassRepository) GetStudentGradesByID(ctx context.Context, studentID uint) ([]*model.Grade, error) {
 	classes, err := r.GetClassesForStudent(ctx, studentID)
+	fmt.Println(classes[0])
 	if err != nil {
 		return nil, err
 	}
 	var res []*model.Grade
 
 	for _, class := range classes {
-		teacher, err := r.GetClassTeacherByID(ctx, class.TeacherID)
-		if err != nil {
-			return nil, err
-		}
 		grades, err := r.GetClassGradesByIDForStudent(ctx, class.ID, studentID)
+		fmt.Println(grades)
 		if err != nil {
 			return nil, err
 		}
@@ -328,8 +332,11 @@ func (r *ClassRepository) GetStudentGradesByID(ctx context.Context, studentID ui
 			ClassID:   class.ID,
 			ClassCode: class.ClassCode,
 			ClassName: class.ClassName,
-			Teacher:   *teacher,
-			Students:  grades.Students,
+			Teacher: model.User{
+				ID:       class.TeacherID,
+				FullName: class.TeacherName,
+			},
+			Students: grades.Students,
 		})
 	}
 	return res, nil
@@ -349,6 +356,7 @@ func (r *ClassRepository) GetMyStudentsForTeacher(ctx context.Context, id uint) 
 
 	return ids, nil
 }
+
 func (r *ClassRepository) GetMyStudentsForStudent(ctx context.Context, id uint) ([]uint, error) {
 	var ids []uint
 	query := `
@@ -376,10 +384,12 @@ func (r *ClassRepository) GetMyTeachers(ctx context.Context, id uint) ([]uint, e
 		FROM relationships
 		WHERE student_id = $1;
 	`
+	fmt.Println(ids)
 
 	if err := r.DB.SelectContext(ctx, &ids, query, id); err != nil {
 		return nil, err
 	}
+	fmt.Println("0000")
 
 	return ids, nil
 }

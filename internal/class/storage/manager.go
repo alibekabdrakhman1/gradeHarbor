@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/class/storage/postgre"
@@ -15,6 +16,7 @@ type Repository struct {
 
 func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error) {
 	DB, err := postgre.Dial(ctx, dsn(*cfg))
+	fmt.Println(dsn(*cfg))
 	if err != nil {
 		return nil, err
 	}
@@ -27,11 +29,11 @@ func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error)
 }
 
 func dsn(cfg config.Config) string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host,
-		cfg.Database.Port,
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.Database.User,
 		cfg.Database.Password,
+		cfg.Database.Host,
+		cfg.Database.Port,
 		cfg.Database.Name,
 		cfg.Database.SslMode,
 	)

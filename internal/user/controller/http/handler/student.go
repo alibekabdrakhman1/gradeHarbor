@@ -20,6 +20,14 @@ func NewStudentHandler(service *service.Service, logger *zap.SugaredLogger) *Stu
 	}
 }
 
+// GetGroupmates @Summary Get groupmates
+// @Description Retrieves a list of groupmates for the student.
+// @ID student-get-groupmates
+// @Tags student
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful groupmates retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/student/groupmates [get]
 func (h *StudentHandler) GetGroupmates(c echo.Context) error {
 	groupmates, err := h.service.Student.GetGroupmates(c.Request().Context())
 
@@ -36,6 +44,14 @@ func (h *StudentHandler) GetGroupmates(c echo.Context) error {
 	})
 }
 
+// GetGrades @Summary Get grades
+// @Description Retrieves the grades for the student.
+// @ID student-get-grades
+// @Tags student
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful grades retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/student/grades [get]
 func (h *StudentHandler) GetGrades(c echo.Context) error {
 	grades, err := h.service.Student.GetGrades(c.Request().Context())
 
@@ -52,6 +68,14 @@ func (h *StudentHandler) GetGrades(c echo.Context) error {
 	})
 }
 
+// GetParent @Summary Get parent
+// @Description Retrieves the parent associated with the student.
+// @ID student-get-parent
+// @Tags student
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful parent retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/student/parent [get]
 func (h *StudentHandler) GetParent(c echo.Context) error {
 	parent, err := h.service.Student.GetParent(c.Request().Context())
 
@@ -68,6 +92,14 @@ func (h *StudentHandler) GetParent(c echo.Context) error {
 	})
 }
 
+// GetTeachers @Summary Get teachers
+// @Description Retrieves the teachers associated with the student.
+// @ID student-get-teachers
+// @Tags student
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful teachers retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/student/teachers [get]
 func (h *StudentHandler) GetTeachers(c echo.Context) error {
 	teachers, err := h.service.Student.GetTeachers(c.Request().Context())
 

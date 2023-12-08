@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/config"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/model"
 	"github.com/alibekabdrakhman1/gradeHarbor/internal/user/storage/postgre"
@@ -17,6 +18,7 @@ type Repository struct {
 
 func NewRepository(ctx context.Context, cfg *config.Config) (*Repository, error) {
 	DB, err := postgre.Dial(ctx, dsn(*cfg))
+	fmt.Println(dsn(*cfg))
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +50,8 @@ type IUserRepository interface {
 	Delete(ctx context.Context, id uint) error
 	Update(ctx context.Context, user model.User, userID uint) (*model.User, error)
 	GetById(ctx context.Context, id uint) (*model.UserResponse, error)
-	GetProfileById(ctx context.Context, id uint) (*model.UserResponse, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	ConfirmUser(ctx context.Context, email string) error
 	GetStudentParentByID(ctx context.Context, id uint) (*model.ParentResponse, error)
 	GetParentChildrenByID(ctx context.Context, id uint) ([]*model.UserResponse, error)
 }
@@ -57,7 +59,7 @@ type IUserRepository interface {
 type IAdminRepository interface {
 	GetAllTeachers(ctx context.Context) ([]*model.UserResponse, error)
 	GetAllStudents(ctx context.Context) ([]*model.UserResponse, error)
-	GetAllParents(ctx context.Context) ([]*model.ParentResponse, error)
+	GetAllParents(ctx context.Context) ([]*model.UserResponse, error)
 	DeleteUserByID(ctx context.Context, id uint) error
 	PutParent(ctx context.Context, studentID uint, parentID uint) error
 	GetUserByID(ctx context.Context, id uint) (*model.UserResponse, error)

@@ -8,6 +8,6 @@ import (
 type IUserTokenService interface {
 	Login(ctx context.Context, login model.Login) (*model.TokenResponse, error)
 	Register(ctx context.Context, user model.Register) (uint, error)
-	Verify(ctx context.Context, email string, code string) error
+	Confirm(ctx context.Context, email string, code string) error
 	RefreshToken(ctx context.Context, refreshToken string) (*model.JwtTokens, error)
 }

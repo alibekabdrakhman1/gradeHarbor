@@ -36,7 +36,7 @@ func NewUserGrpcTransport(config config.UserGrpcTransport, logger *zap.SugaredLo
 }
 
 func (t *UserGrpcTransport) CreateUser(ctx context.Context, in *proto.CreateUserRequest, opts ...grpc.CallOption) (*proto.CreateUserResponse, error) {
-	response, err := t.client.CreateUser(ctx, in)
+	response, err := t.client.CreateUser(ctx, in, opts...)
 	if err != nil {
 		t.logger.Errorf("gprc CreateUser error: %v", err)
 		return nil, fmt.Errorf("cannot CreateUser: %w", err)
@@ -49,7 +49,7 @@ func (t *UserGrpcTransport) CreateUser(ctx context.Context, in *proto.CreateUser
 }
 
 func (t *UserGrpcTransport) GetUserByEmail(ctx context.Context, in *proto.GetUserByEmailRequest, opts ...grpc.CallOption) (*proto.GetUserByEmailResponse, error) {
-	response, err := t.client.GetUserByEmail(ctx, in)
+	response, err := t.client.GetUserByEmail(ctx, in, opts...)
 	if err != nil {
 		t.logger.Errorf("gprc GetUserByEmail error: %v", err)
 		return nil, fmt.Errorf("cannot GetUserByEmail: %w", err)
@@ -59,4 +59,12 @@ func (t *UserGrpcTransport) GetUserByEmail(ctx context.Context, in *proto.GetUse
 		return nil, fmt.Errorf("not found")
 	}
 	return response, nil
+}
+
+func (t *UserGrpcTransport) ConfirmUser(ctx context.Context, in *proto.ConfirmUserRequest, opts ...grpc.CallOption) (*proto.ConfirmUserResponse, error) {
+	user, err := t.client.ConfirmUser(ctx, in, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

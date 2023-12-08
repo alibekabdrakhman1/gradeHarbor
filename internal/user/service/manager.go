@@ -10,6 +10,7 @@ type IUserService interface {
 	GetByID(ctx context.Context, userID uint) (*model.UserResponse, error)
 	GetByContext(ctx context.Context) (*model.UserResponse, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	ConfirmUser(ctx context.Context, email string) error
 	Update(ctx context.Context, user model.User) (*model.User, error)
 	Delete(ctx context.Context) error
 	DeleteByID(ctx context.Context, userID uint) error
@@ -28,7 +29,7 @@ type IAuthService interface {
 type IAdminService interface {
 	GetAllTeachers(ctx context.Context) ([]*model.UserResponse, error)
 	GetAllStudents(ctx context.Context) ([]*model.UserResponse, error)
-	GetAllParents(ctx context.Context) ([]*model.ParentResponse, error)
+	GetAllParents(ctx context.Context) ([]*model.UserResponse, error)
 	DeleteUserByID(ctx context.Context, id uint) error
 	PutParent(ctx context.Context, studentID uint, parentID uint) error
 	CreateAdmin(ctx context.Context, user model.User) (uint, error)

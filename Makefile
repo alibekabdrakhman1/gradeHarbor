@@ -2,14 +2,22 @@ protoc:
 	protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative ./pkg/proto/user/user.proto
 	protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative ./pkg/proto/class/class.proto
 
-all: class auth user
+swagger-auth:
+	cd internal/auth && swag init -g ../../cmd/app/auth/main.go
 
-class:
-	go build -o bin/class github.com/alibekabdrakhman1/gradeHarbor/cmd/app/class
+swagger-class:
+	cd internal/class && swag init -g ../../cmd/app/class/main.go
 
-auth:
-	go build -o bin/auth github.com/alibekabdrakhman1/gradeHarbor/cmd/app/auth
+swagger-user:
+	cd internal/user && swag init -g ../../cmd/app/user/main.go
 
-user:
-	go build -o bin/user github.com/alibekabdrakhman1/gradeHarbor/cmd/app/user
+fix-lint:
+	golangci-lint run --fix
 
+compose-up:
+	docker-compose up --build -d postgres && docker-compose logs -f
+.PHONY: compose-up
+
+compose-down:
+	docker-compose down
+.PHONY: compose-up

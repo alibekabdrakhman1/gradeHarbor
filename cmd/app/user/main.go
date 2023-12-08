@@ -8,6 +8,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// @title User Service
+// @version 1.0
+// @description User Service
+
+// @host localhost:8081
+// @BasePath /
+
+// @securityDefinitions.apikey	BearerAuth
+// @name Authorization
+// @in header
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
@@ -19,7 +29,6 @@ func main() {
 	if err != nil {
 		l.Fatalf("failed to load config err: %v", err)
 	}
-	fmt.Println(cfg.Transport)
 	app := applicator.New(l, &cfg)
 	app.Run()
 }

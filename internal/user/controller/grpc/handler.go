@@ -38,3 +38,13 @@ func (s *Server) GetUserByEmail(ctx context.Context, in *proto.GetUserByEmailReq
 	}
 	return response, nil
 }
+
+func (s *Server) ConfirmUser(ctx context.Context, in *proto.ConfirmUserRequest) (*proto.ConfirmUserResponse, error) {
+	err := s.service.User.ConfirmUser(ctx, in.GetEmail())
+	if err != nil {
+		return nil, err
+	}
+
+	response := &proto.ConfirmUserResponse{}
+	return response, nil
+}

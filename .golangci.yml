@@ -1,0 +1,8 @@
+linters:
+  enable-all: true
+  disable:
+    - gosec
+    - maligned
+    - typecheck
+    - varnamelen
+    - tagliatelle

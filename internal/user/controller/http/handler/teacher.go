@@ -20,6 +20,14 @@ func NewTeacherHandler(service *service.Service, logger *zap.SugaredLogger) *Tea
 	}
 }
 
+// GetStudents @Summary Get all students
+// @Description Retrieves a list of all students.
+// @ID teacher-get-students
+// @Tags teacher
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful students retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/teacher/students [get]
 func (h *TeacherHandler) GetStudents(c echo.Context) error {
 	students, err := h.service.Teacher.GetStudents(c.Request().Context())
 

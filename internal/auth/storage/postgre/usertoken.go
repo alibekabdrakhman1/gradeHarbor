@@ -19,6 +19,36 @@ func NewUserTokenRepository(db *gorm.DB, logger *zap.SugaredLogger) *UserTokenRe
 		logger: logger,
 	}
 }
+
+func (r *UserTokenRepository) CreateUserMessage(ctx context.Context, message model.Message) error {
+	err := r.DB.WithContext(ctx).Create(&message).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserTokenRepository) DeleteUserMessage(ctx context.Context, email string) error {
+	var res model.Message
+	if err := r.DB.WithContext(ctx).Where("email = ?", email).Find(&res).Error; err != nil {
+		return err
+	}
+
+	if err := r.DB.WithContext(ctx).Delete(&res).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UserTokenRepository) GetUserMessage(ctx context.Context, email string) (string, error) {
+	var res model.Message
+	err := r.DB.WithContext(ctx).Where("email = ?", email).Find(&res).Error
+
+	return res.Code, err
+}
+
 func (r *UserTokenRepository) CreateUserToken(ctx context.Context, userToken model.UserToken) error {
 	var existingToken model.UserToken
 	result := r.DB.WithContext(ctx).Where("user_id = ?", userToken.UserID).First(&existingToken)

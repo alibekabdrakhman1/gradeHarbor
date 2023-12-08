@@ -23,6 +23,16 @@ func NewAdminHandler(service *service.Service, logger *zap.SugaredLogger) *Admin
 	return &AdminHandler{service: service, logger: logger}
 }
 
+// GetUserByID retrieves a user by ID.
+// @Summary Get user by ID
+// @Description Retrieves a user based on the provided ID.
+// @ID admin-get-user-by-id
+// @Tags admin
+// @Param id path int true "User ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of user by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/users/{id} [get]
 func (h *AdminHandler) GetUserByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -44,6 +54,16 @@ func (h *AdminHandler) GetUserByID(c echo.Context) error {
 	})
 }
 
+// GetStudentTeachersByID retrieves teachers of a student by ID.
+// @Summary Get student teachers by ID
+// @Description Retrieves teachers of a student based on the provided ID.
+// @ID admin-get-student-teachers-by-id
+// @Tags admin
+// @Param id path int true "Student ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of student teachers by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/students/{id}/teachers [get]
 func (h *AdminHandler) GetStudentTeachersByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -65,6 +85,16 @@ func (h *AdminHandler) GetStudentTeachersByID(c echo.Context) error {
 	})
 }
 
+// GetUserClassesByID retrieves classes of a user by ID.
+// @Summary Get user classes by ID
+// @Description Retrieves classes of a user based on the provided ID.
+// @ID admin-get-user-classes-by-id
+// @Tags admin
+// @Param id path int true "User ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of user classes by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/users/{id}/classes [get]
 func (h *AdminHandler) GetUserClassesByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -86,6 +116,16 @@ func (h *AdminHandler) GetUserClassesByID(c echo.Context) error {
 	})
 }
 
+// GetStudentGradesByID retrieves grades of a student by ID.
+// @Summary Get student grades by ID
+// @Description Retrieves grades of a student based on the provided ID.
+// @ID admin-get-student-grades-by-id
+// @Tags admin
+// @Param id path int true "Student ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of student grades by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/students/{id}/grades [get]
 func (h *AdminHandler) GetStudentGradesByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -121,6 +161,16 @@ func (h *AdminHandler) GetStudentGradesByID(c echo.Context) error {
 	})
 }
 
+// GetStudentParentByID retrieves parent of a student by ID.
+// @Summary Get student parent by ID
+// @Description Retrieves parent of a student based on the provided ID.
+// @ID admin-get-student-parent-by-id
+// @Tags admin
+// @Param id path int true "Student ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of student parent by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/students/{id}/parent [get]
 func (h *AdminHandler) GetStudentParentByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -142,6 +192,16 @@ func (h *AdminHandler) GetStudentParentByID(c echo.Context) error {
 	})
 }
 
+// GetParentChildrenByID retrieves children of a parent by ID.
+// @Summary Get parent children by ID
+// @Description Retrieves children of a parent based on the provided ID.
+// @ID admin-get-parent-children-by-id
+// @Tags admin
+// @Param id path int true "Parent ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of parent children by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/parents/{id}/children [get]
 func (h *AdminHandler) GetParentChildrenByID(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -163,6 +223,15 @@ func (h *AdminHandler) GetParentChildrenByID(c echo.Context) error {
 	})
 }
 
+// GetAllStudents retrieves all students.
+// @Summary Get all students
+// @Description Retrieves all students.
+// @ID admin-get-all-students
+// @Tags admin
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of all students response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/students [get]
 func (h *AdminHandler) GetAllStudents(c echo.Context) error {
 	students, err := h.service.Admin.GetAllStudents(c.Request().Context())
 	if err != nil {
@@ -178,8 +247,17 @@ func (h *AdminHandler) GetAllStudents(c echo.Context) error {
 	})
 }
 
+// GetAllTeachers retrieves all teachers.
+// @Summary Get all teachers
+// @Description Retrieves all teachers.
+// @ID admin-get-all-teachers
+// @Tags admin
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of all teachers response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/teachers [get]
 func (h *AdminHandler) GetAllTeachers(c echo.Context) error {
-	teachers, err := h.service.Admin.GetAllStudents(c.Request().Context())
+	teachers, err := h.service.Admin.GetAllTeachers(c.Request().Context())
 	if err != nil {
 		h.logger.Error(err)
 		return c.JSON(http.StatusBadRequest, response.APIResponse{
@@ -193,8 +271,17 @@ func (h *AdminHandler) GetAllTeachers(c echo.Context) error {
 	})
 }
 
+// GetAllParents retrieves all parents.
+// @Summary Get all parents
+// @Description Retrieves all parents.
+// @ID admin-get-all-parents
+// @Tags admin
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful retrieval of all parents response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/parents [get]
 func (h *AdminHandler) GetAllParents(c echo.Context) error {
-	parents, err := h.service.Admin.GetAllStudents(c.Request().Context())
+	parents, err := h.service.Admin.GetAllParents(c.Request().Context())
 	if err != nil {
 		h.logger.Error(err)
 		return c.JSON(http.StatusBadRequest, response.APIResponse{
@@ -208,6 +295,16 @@ func (h *AdminHandler) GetAllParents(c echo.Context) error {
 	})
 }
 
+// DeleteUser deletes a user by ID.
+// @Summary Delete user by ID
+// @Description Deletes a user based on the provided ID.
+// @ID admin-delete-user
+// @Tags admin
+// @Param id path int true "User ID"
+// @Produce json
+// @Success 200 {object} response.APIResponse "Successful deletion of user by ID response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/users/{id} [delete]
 func (h *AdminHandler) DeleteUser(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {
@@ -228,6 +325,17 @@ func (h *AdminHandler) DeleteUser(c echo.Context) error {
 	})
 }
 
+// CreateAdmin creates a new admin user.
+// @Summary Create a new admin
+// @Description Creates a new admin user based on the provided data.
+// @ID admin-create-admin
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param request body model.User true "Admin creation request payload"
+// @Success 200 {object} response.APIResponse "Successful creation of new admin response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/admins [post]
 func (h *AdminHandler) CreateAdmin(c echo.Context) error {
 	body, err := ioutil.ReadAll(c.Request().Body)
 	if err != nil {
@@ -258,6 +366,18 @@ func (h *AdminHandler) CreateAdmin(c echo.Context) error {
 	})
 }
 
+// PutParent updates the parent of a user by ID.
+// @Summary Update user parent by ID
+// @Description Updates the parent of a user based on the provided ID and request data.
+// @ID admin-put-parent
+// @Tags admin
+// @Param id path int true "User ID"
+// @Accept json
+// @Produce json
+// @Param request body model.ParentIDReq true "Parent ID request payload"
+// @Success 200 {object} response.APIResponse "Successful update of user parent response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /admin/students/{id}/parent [put]
 func (h *AdminHandler) PutParent(c echo.Context) error {
 	id, err := utils.ConvertIdToUint(c.Param("id"))
 	if err != nil {

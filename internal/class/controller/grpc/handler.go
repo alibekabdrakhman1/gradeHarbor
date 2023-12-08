@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/alibekabdrakhman1/gradeHarbor/pkg/enums"
 	proto "github.com/alibekabdrakhman1/gradeHarbor/pkg/proto/class"
 )
@@ -16,6 +17,7 @@ func (s *Server) GetMyUsers(ctx context.Context, in *proto.MyUsersRequest) (*pro
 		students = append(students, uint32(v))
 	}
 	var teachers []uint32
+	fmt.Println(in)
 	if in.Role == enums.Student {
 		res, err := s.service.Class.GetMyTeachers(ctx, uint(in.Id))
 		if err != nil {
@@ -25,7 +27,6 @@ func (s *Server) GetMyUsers(ctx context.Context, in *proto.MyUsersRequest) (*pro
 			teachers = append(teachers, uint32(v))
 		}
 	}
-
 	return &proto.MyUsersResponse{
 		Students: students,
 		Teachers: teachers,

@@ -20,6 +20,14 @@ func NewParentHandler(service *service.Service, logger *zap.SugaredLogger) *Pare
 	}
 }
 
+// GetChildren @Summary Get children
+// @Description Retrieves the children associated with the parent.
+// @ID parent-get-children
+// @Tags parent
+// @Security ApiKeyAuth
+// @Success 200 {object} response.APIResponse "Successful children retrieval response"
+// @Failure 400 {object} response.APIResponse "Bad Request"
+// @Router /v1/user/parent/children [get]
 func (h *ParentHandler) GetChildren(c echo.Context) error {
 	children, err := h.service.Parent.GetChildren(c.Request().Context())
 
